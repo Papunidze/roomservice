@@ -50,4 +50,8 @@ describe("displayName", () => {
   it("keeps a single-word local part", () => {
     expect(displayName("nino@batumipalace.ge")).toBe("Nino");
   });
+
+  it("falls back to the email when the local part is only separators", () => {
+    expect(displayName("-@example.com")).toBe("-@example.com");
+  });
 });

@@ -51,9 +51,11 @@ export function hasErrors(errors: SignUpErrors) {
 }
 
 export function displayName(email: string) {
-  return (email.split("@")[0] ?? "")
+  const name = (email.split("@")[0] ?? "")
     .split(/[._-]+/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+
+  return name || email;
 }

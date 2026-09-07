@@ -156,6 +156,26 @@ Adding a language means dropping its flag in that folder under the language
 code. Flags are `aria-hidden`: the native and English names sit beside them, so
 a screen reader announces the language once.
 
+## Deploying
+
+Vercel needs no configuration: it detects Next.js and honours the `packageManager`
+field. There are no environment variables, no `vercel.json`, and the `prepare`
+hook exits 0 when husky finds no `.git`, so a CI install does not break.
+
+```
+npx vercel login      # you, not CI — Vercel auth is per-account
+npx vercel --prod     # deploys this directory
+```
+
+Importing the GitHub repo in the Vercel dashboard instead makes every push to
+`main` deploy on its own, which suits the branch-per-change workflow better.
+
+A deployed URL is a **demo, not a shared instance**. Every mutable slice is
+localStorage, so each visitor gets a private copy of the data and the
+guest → desk hand-off only works within one browser. Two people opening the
+link cannot see each other's requests. That changes when the stores above are
+replaced with a real backend.
+
 ## Stale directories
 
 `supabase/` and `shared/types/supabase.ts` describe the previous product (a
