@@ -3,8 +3,9 @@
 import { Wifi } from "lucide-react";
 import { useState } from "react";
 
-import { HOTEL } from "@/features/requests";
-import type { Phrases } from "@/shared/i18n";
+import { useSettings } from "@/features/requests";
+import { DICTIONARY, scriptFont, type Phrases } from "@/shared/i18n";
+import { cn } from "@/shared/lib/cn";
 
 import { ScreenHeader } from "./ScreenHeader";
 
@@ -14,18 +15,19 @@ interface HotelInfoScreenProps {
 }
 
 export function HotelInfoScreen({ phrases, onBack }: HotelInfoScreenProps) {
+  const { hotel, info, infoSourceLang } = useSettings();
   const [copied, setCopied] = useState(false);
 
   const rows = [
-    { label: phrases.breakfast, value: HOTEL.breakfast },
-    { label: phrases.spa, value: HOTEL.spa },
-    { label: phrases.reception, value: HOTEL.reception },
-    { label: phrases.checkoutRow, value: HOTEL.checkout },
+    { label: phrases.breakfast, value: info.breakfast },
+    { label: phrases.spa, value: info.spa },
+    { label: phrases.reception, value: info.reception },
+    { label: phrases.checkoutRow, value: hotel.checkout },
   ];
 
   const copyPassword = () => {
     navigator.clipboard
-      ?.writeText(HOTEL.wifiPassword)
+      ?.writeText(info.wifiPassword)
       .then(() => setCopied(true))
       .catch(() => setCopied(false));
   };
@@ -50,11 +52,11 @@ export function HotelInfoScreen({ phrases, onBack }: HotelInfoScreenProps) {
           </span>
         </span>
         <span className="mt-4 block text-2xl font-semibold tracking-[-0.02em]">
-          {HOTEL.wifiNetwork}
+          {info.wifiName}
         </span>
         <span className="mt-4 flex items-baseline justify-between border-t border-line-strong pt-4">
           <span className="font-mono text-[17px] tracking-[0.08em]">
-            {HOTEL.wifiPassword}
+            {info.wifiPassword}
           </span>
           <span className="text-xs text-faint">
             {copied ? phrases.copied : phrases.tapCopy}
@@ -72,6 +74,21 @@ export function HotelInfoScreen({ phrases, onBack }: HotelInfoScreenProps) {
             <span className="text-[14.5px] font-medium">{row.value}</span>
           </div>
         ))}
+      </div>
+
+      <div className="mt-6 px-1">
+        <div className="text-[12.5px] font-medium text-faint">
+          {phrases.houseRules} · {DICTIONARY[infoSourceLang].native}
+        </div>
+        <p
+          dir={DICTIONARY[infoSourceLang].dir}
+          className={cn(
+            "mt-2 text-start text-[14.5px] leading-relaxed",
+            scriptFont(infoSourceLang),
+          )}
+        >
+          {info.rules}
+        </p>
       </div>
     </div>
   );

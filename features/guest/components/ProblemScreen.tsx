@@ -3,7 +3,11 @@
 import { Camera, Info } from "lucide-react";
 import { useState } from "react";
 
-import { PROBLEM_KEYS, type ProblemKey } from "@/features/requests";
+import {
+  PROBLEM_KEYS,
+  useSettings,
+  type ProblemKey,
+} from "@/features/requests";
 import type { Phrases } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 
@@ -25,7 +29,11 @@ export function ProblemScreen({
   onBack,
   onSubmit,
 }: ProblemScreenProps) {
+  const settings = useSettings();
   const [keys, setKeys] = useState<ProblemKey[]>([]);
+  const offered = PROBLEM_KEYS.filter(
+    (key) => settings.categories[key].enabled,
+  );
   const [note, setNote] = useState("");
   const [photo, setPhoto] = useState(false);
 
@@ -46,7 +54,7 @@ export function ProblemScreen({
       />
 
       <div className="mb-7 flex flex-wrap gap-2">
-        {PROBLEM_KEYS.map((key) => {
+        {offered.map((key) => {
           const selected = keys.includes(key);
           return (
             <button

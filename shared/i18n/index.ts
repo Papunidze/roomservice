@@ -1,8 +1,9 @@
-export { CANNED, CANNED_KEYS, type CannedKey } from "./canned";
+export { CANNED, CANNED_KEYS, CANNED_LABEL, type CannedKey } from "./canned";
 export {
   DICTIONARY,
   LANGUAGES,
   type LangCode,
   type Phrases,
 } from "./dictionary";
-export { isRtlText, scriptFont } from "./script";
+export { matchesLanguage } from "./search";
+export { scriptFont } from "./script";

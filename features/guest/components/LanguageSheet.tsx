@@ -9,6 +9,7 @@ import {
   type LangCode,
 } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
+import { Flag } from "@/shared/ui";
 
 interface LanguageSheetProps {
   title: string;
@@ -31,10 +32,10 @@ export function LanguageSheet({
         onClick={onClose}
         className="animate-fade absolute inset-0 w-full cursor-default bg-ink/30"
       />
-      <div className="animate-sheet absolute inset-x-0 bottom-0 mx-auto max-w-[430px] rounded-t-sheet bg-paper px-5.5 pt-5 pb-7.5">
+      <div className="animate-sheet absolute inset-x-0 bottom-0 mx-auto flex max-h-[85dvh] max-w-[430px] flex-col rounded-t-sheet bg-paper px-5.5 pt-5 pb-7.5">
         <div className="mx-auto mb-5 h-[3px] w-9 rounded-full bg-ink/20" />
         <div className="mb-3.5 text-[12.5px] text-faint">{title}</div>
-        <div className="flex flex-col gap-px bg-line">
+        <div className="scrollbar-slim flex min-h-0 flex-1 flex-col gap-px overflow-y-auto bg-line">
           {LANGUAGES.map((code) => {
             const phrases = DICTIONARY[code];
             const on = code === current;
@@ -50,12 +51,17 @@ export function LanguageSheet({
               >
                 <span
                   dir={phrases.dir}
-                  className={cn(
-                    "flex-1 text-start text-[21px] font-medium tracking-[-0.02em]",
-                    scriptFont(code),
-                  )}
+                  className="flex flex-1 items-center gap-3"
                 >
-                  {phrases.native}
+                  <Flag code={code} className="h-6 w-8" />
+                  <span
+                    className={cn(
+                      "text-[21px] font-medium tracking-[-0.02em]",
+                      scriptFont(code),
+                    )}
+                  >
+                    {phrases.native}
+                  </span>
                 </span>
                 {on ? (
                   <Check strokeWidth={2} className="size-4 text-sage" />

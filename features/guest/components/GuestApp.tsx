@@ -5,13 +5,11 @@ import { useCallback, useState } from "react";
 import {
   appendMessage,
   createRequest,
-  customGuestLanguage,
   guestLanguage,
   useRequests,
   type CheckoutOption,
   type Dish,
   type GuestLanguage,
-  type ItemKey,
   type ProblemKey,
   type Request,
 } from "@/features/requests";
@@ -23,6 +21,7 @@ import {
   itemsRequest,
   problemRequest,
   serviceRequest,
+  type ItemPick,
 } from "../build-request";
 import type { GuestScreen } from "../screens";
 import { HomeScreen } from "./HomeScreen";
@@ -59,7 +58,6 @@ export function GuestApp({ room }: { room: string }) {
         <LanguageScreen
           room={room}
           onPick={(code) => pickLanguage(guestLanguage(code))}
-          onPickCustom={(name) => pickLanguage(customGuestLanguage(name))}
         />
       </GuestFrame>
     );
@@ -102,10 +100,9 @@ export function GuestApp({ room }: { room: string }) {
       {screen === "items" ? (
         <ItemsScreen
           phrases={phrases}
+          lang={language.base}
           onBack={goHome}
-          onSubmit={(counts: Partial<Record<ItemKey, number>>) =>
-            submit(itemsRequest(base, counts))
-          }
+          onSubmit={(picks: ItemPick[]) => submit(itemsRequest(base, picks))}
         />
       ) : null}
 

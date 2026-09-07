@@ -2,34 +2,41 @@
 
 import { useState } from "react";
 
-import { ITEM_KEYS, type ItemKey } from "@/features/requests";
-import type { Phrases } from "@/shared/i18n";
+import { itemLabel, useSettings } from "@/features/requests";
+import type { LangCode, Phrases } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 
+import type { ItemPick } from "../build-request";
 import { PrimaryAction } from "./PrimaryAction";
 import { ScreenHeader } from "./ScreenHeader";
 
-type Counts = Partial<Record<ItemKey, number>>;
-
 interface ItemsScreenProps {
   phrases: Phrases;
+  lang: LangCode;
   onBack: () => void;
-  onSubmit: (counts: Counts) => void;
+  onSubmit: (picks: ItemPick[]) => void;
 }
 
 const stepperClass =
   "size-9 shrink-0 cursor-pointer rounded-full border border-line-strong text-base leading-none disabled:cursor-default disabled:text-stone";
 
-export function ItemsScreen({ phrases, onBack, onSubmit }: ItemsScreenProps) {
-  const [counts, setCounts] = useState<Counts>({});
+export function ItemsScreen({
+  phrases,
+  lang,
+  onBack,
+  onSubmit,
+}: ItemsScreenProps) {
+  const settings = useSettings();
+  const [counts, setCounts] = useState<Record<string, number>>({});
 
-  const step = (key: ItemKey, delta: number) =>
+  const offered = settings.items.filter((item) => item.available);
+  const total = offered.reduce((sum, item) => sum + (counts[item.key] ?? 0), 0);
+
+  const step = (key: string, delta: number) =>
     setCounts((current) => ({
       ...current,
       [key]: Math.max(0, (current[key] ?? 0) + delta),
     }));
-
-  const total = ITEM_KEYS.reduce((sum, key) => sum + (counts[key] ?? 0), 0);
 
   return (
     <div className="animate-rise px-5.5 pt-3.5 pb-10">
@@ -41,24 +48,23 @@ export function ItemsScreen({ phrases, onBack, onSubmit }: ItemsScreenProps) {
       />
 
       <div className="flex flex-col">
-        {ITEM_KEYS.map((key, index) => {
-          const quantity = counts[key] ?? 0;
+        {offered.map((item, index) => {
+          const quantity = counts[item.key] ?? 0;
+          const label = itemLabel(item, lang);
           return (
             <div
-              key={key}
+              key={item.key}
               className={cn(
                 "flex min-h-[68px] items-center gap-2.5 px-1",
-                index < ITEM_KEYS.length - 1 && "border-b border-line",
+                index < offered.length - 1 && "border-b border-line",
               )}
             >
-              <span className="flex-1 text-[15.5px] font-medium">
-                {phrases[key]}
-              </span>
+              <span className="flex-1 text-[15.5px] font-medium">{label}</span>
               <button
                 type="button"
-                aria-label={`${phrases.remove} — ${phrases[key]}`}
+                aria-label={`${phrases.remove} — ${label}`}
                 disabled={quantity === 0}
-                onClick={() => step(key, -1)}
+                onClick={() => step(item.key, -1)}
                 className={stepperClass}
               >
                 −
@@ -68,8 +74,8 @@ export function ItemsScreen({ phrases, onBack, onSubmit }: ItemsScreenProps) {
               </span>
               <button
                 type="button"
-                aria-label={`${phrases.add} — ${phrases[key]}`}
-                onClick={() => step(key, 1)}
+                aria-label={`${phrases.add} — ${label}`}
+                onClick={() => step(item.key, 1)}
                 className={stepperClass}
               >
                 +
@@ -84,7 +90,13 @@ export function ItemsScreen({ phrases, onBack, onSubmit }: ItemsScreenProps) {
           total > 0 ? `${phrases.sendRequest} · ${total}` : phrases.sendRequest
         }
         enabled={total > 0}
-        onClick={() => onSubmit(counts)}
+        onClick={() =>
+          onSubmit(
+            offered
+              .filter((item) => (counts[item.key] ?? 0) > 0)
+              .map((item) => ({ item, count: counts[item.key] ?? 0 })),
+          )
+        }
       />
     </div>
   );

@@ -15,7 +15,7 @@ import {
 
 import type { LangCode } from "@/shared/i18n";
 
-import type { Category } from "./types";
+import type { Category, StaffRole, Urgency } from "./types";
 
 export const CATEGORY_LABEL: Record<Category, string> = {
   ac: "Air conditioning",
@@ -70,6 +70,12 @@ export const ITEM_KEYS = [
 
 export type ItemKey = (typeof ITEM_KEYS)[number];
 
+const ITEM_KEY_SET = new Set<string>(ITEM_KEYS);
+
+export function isItemKey(key: string): key is ItemKey {
+  return ITEM_KEY_SET.has(key);
+}
+
 export interface Dish {
   key: string;
   name: string;
@@ -115,15 +121,52 @@ export const CHECKOUT_OPTIONS: CheckoutOption[] = [
   { time: "16:00", surchargeTetri: 5000 },
 ];
 
+export const CONFIGURABLE_CATEGORIES = [
+  "ac",
+  "tv",
+  "wifi",
+  "water",
+  "noise",
+  "cleaning",
+  "items",
+  "other",
+] as const satisfies readonly Category[];
+
+export type ConfigurableCategory = (typeof CONFIGURABLE_CATEGORIES)[number];
+
+export const CATEGORY_DEFAULT: Record<
+  ConfigurableCategory,
+  { urgency: Urgency; role: StaffRole }
+> = {
+  ac: { urgency: "high", role: "Maintenance" },
+  tv: { urgency: "medium", role: "Maintenance" },
+  wifi: { urgency: "medium", role: "Maintenance" },
+  water: { urgency: "high", role: "Maintenance" },
+  noise: { urgency: "medium", role: "Front desk" },
+  cleaning: { urgency: "medium", role: "Housekeeping" },
+  items: { urgency: "low", role: "Housekeeping" },
+  other: { urgency: "medium", role: "Front desk" },
+};
+
 export const HOTEL = {
   name: "Batumi Palace",
+  address: "Seaside Boulevard 12, Batumi 6000",
+  timezone: "Asia/Tbilisi (GMT+4)",
   wifiNetwork: "Palace_Guest",
   wifiPassword: "sea2025",
   breakfast: "07:00 – 10:30",
   spa: "08:00 – 22:00",
   reception: "24/7",
   checkout: "12:00",
+  rules:
+    "Quiet hours 23:00–08:00. No smoking in rooms. Pool towels are at the spa desk.",
 } as const;
+
+export const TIMEZONES = [
+  "Asia/Tbilisi (GMT+4)",
+  "Europe/Istanbul (GMT+3)",
+  "Europe/Moscow (GMT+3)",
+];
 
 export const FRONT_DESK_AGENT = "Nino T.";
 

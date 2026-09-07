@@ -1,4 +1,4 @@
-import { DICTIONARY, isRtlText, type LangCode } from "@/shared/i18n";
+import { DICTIONARY, type LangCode } from "@/shared/i18n";
 
 import type { GuestLanguage, Message } from "./types";
 
@@ -10,16 +10,6 @@ export function guestLanguage(code: LangCode): GuestLanguage {
     code: phrases.code,
     dir: phrases.dir,
     base: code,
-  };
-}
-
-export function customGuestLanguage(name: string): GuestLanguage {
-  return {
-    name,
-    native: name,
-    code: "XX",
-    dir: isRtlText(name) ? "rtl" : "ltr",
-    base: "en",
   };
 }
 

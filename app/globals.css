@@ -18,6 +18,8 @@
   --sage-ink: #2f3e36;
 
   --sand: #d9c9a8;
+  --sand-ink: #6b5a36;
+  --note-ink: #7a6a48;
   --urgent: #b5503c;
   --caution: #c9a227;
 
@@ -36,6 +38,13 @@
     var(--font-ibm-plex-sans-arabic), var(--font-inter-tight), sans-serif;
   --font-georgian:
     var(--font-noto-sans-georgian), var(--font-inter-tight), sans-serif;
+  --font-hebrew:
+    var(--font-noto-sans-hebrew), var(--font-inter-tight), sans-serif;
+  --font-devanagari:
+    var(--font-noto-sans-devanagari), var(--font-inter-tight), sans-serif;
+  --font-cjk:
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
+    "Noto Sans SC", var(--font-inter-tight), sans-serif;
 
   --color-canvas: var(--canvas);
   --color-paper: var(--paper);
@@ -54,6 +63,8 @@
   --color-sage-ink: var(--sage-ink);
 
   --color-sand: var(--sand);
+  --color-sand-ink: var(--sand-ink);
+  --color-note-ink: var(--note-ink);
   --color-urgent: var(--urgent);
   --color-caution: var(--caution);
 

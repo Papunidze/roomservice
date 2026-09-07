@@ -3,79 +3,128 @@
 import { useState } from "react";
 
 import {
-  appendMessage,
+  CATEGORY_LABEL,
   FRONT_DESK_AGENT,
-  FRONT_DESK_LANGUAGE,
-  UNASSIGNED,
-  updateRequest,
   useRequests,
-  type Message,
-  type Status,
+  useSettings,
+  type Request,
 } from "@/features/requests";
+import { useRooms } from "@/features/rooms";
 
+import {
+  addInternalNote,
+  assignRequest,
+  closeRoom,
+  sendReply,
+  setRequestStatus,
+} from "../actions";
+import { InboxFilters, type InboxFilter } from "./InboxFilters";
 import { ConversationPanel } from "./ConversationPanel";
 import { RequestList } from "./RequestList";
 
-export function DeskInbox() {
+function haystack(request: Request) {
+  return [
+    request.room,
+    CATEGORY_LABEL[request.category],
+    request.assignee,
+    ...request.thread.flatMap((message) => [
+      message.text,
+      ...Object.values(message.translations),
+    ]),
+  ]
+    .join(" ")
+    .toLowerCase();
+}
+
+export function DeskInbox({ initialRoom }: { initialRoom: string }) {
   const requests = useRequests();
+  const rooms = useRooms();
+  const settings = useSettings();
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [query, setQuery] = useState(initialRoom);
+  const [filter, setFilter] = useState<InboxFilter>("all");
+  const [mineOnly, setMineOnly] = useState(false);
+
+  const live = requests.filter((request) => !request.archived);
+  const needle = query.trim().toLowerCase();
+  const isFiltered = needle.length > 0 || filter !== "all" || mineOnly;
+
+  const visible = live.filter((request) => {
+    if (filter !== "all" && request.status !== filter) return false;
+    if (mineOnly && request.assignee !== FRONT_DESK_AGENT) return false;
+    if (needle && !haystack(request).includes(needle)) return false;
+    return true;
+  });
 
   const selected =
-    requests.find((request) => request.id === selectedId) ??
-    requests.find((request) => request.status === "new") ??
-    requests[0];
+    visible.find((request) => request.id === selectedId) ??
+    live.find((request) => request.id === selectedId) ??
+    visible[0];
 
-  const reply = (message: Pick<Message, "text" | "lang" | "translations">) => {
-    if (!selected) return;
-    appendMessage(selected.id, {
-      ...message,
-      from: "staff",
-      by: FRONT_DESK_AGENT,
-      minutesAgo: 0,
-    });
-    updateRequest(selected.id, {
-      status: selected.status === "new" ? "progress" : selected.status,
-      assignee:
-        selected.assignee === UNASSIGNED ? FRONT_DESK_AGENT : selected.assignee,
-    });
-    setSelectedId(selected.id);
-  };
+  const session =
+    rooms.find((room) => room.no === selected?.room)?.session ?? null;
 
-  const assign = (assignee: string) => {
-    if (!selected) return;
-    updateRequest(selected.id, {
-      assignee,
-      status:
-        selected.status === "new" && assignee !== UNASSIGNED
-          ? "progress"
-          : selected.status,
-    });
-    setSelectedId(selected.id);
-  };
+  const openInRoom = selected
+    ? live.filter(
+        (request) =>
+          request.room === selected.room && request.status !== "done",
+      ).length
+    : 0;
 
-  const changeStatus = (status: Status) => {
-    if (!selected) return;
-    updateRequest(selected.id, { status });
-    setSelectedId(selected.id);
-  };
+  const select = (id: number) => setSelectedId(id);
 
   return (
-    <div className="flex h-[min(840px,calc(100dvh-8rem))] min-h-[560px] items-stretch">
-      <div className="scrollbar-slim w-100 shrink-0 overflow-y-auto border-r border-line pb-6">
-        <RequestList
-          requests={requests}
-          selectedId={selected?.id ?? null}
-          readingLang={FRONT_DESK_LANGUAGE}
-          onSelect={setSelectedId}
+    <div className="flex h-[min(860px,calc(100dvh-8rem))] min-h-[560px] items-stretch">
+      <div className="flex w-100 shrink-0 flex-col border-r border-line">
+        <InboxFilters
+          query={query}
+          filter={filter}
+          mineOnly={mineOnly}
+          onQueryChange={setQuery}
+          onFilterChange={setFilter}
+          onMineToggle={() => setMineOnly(!mineOnly)}
         />
+        <div className="scrollbar-slim min-h-0 flex-1 overflow-y-auto pb-5">
+          <RequestList
+            requests={visible}
+            isFiltered={isFiltered}
+            selectedId={selected?.id ?? null}
+            readingLang={settings.staffLang}
+            onSelect={select}
+          />
+        </div>
       </div>
 
       <ConversationPanel
         request={selected}
-        staffLang={FRONT_DESK_LANGUAGE}
-        onStatusChange={changeStatus}
-        onAssign={assign}
-        onSend={reply}
+        session={session}
+        openInRoom={openInRoom}
+        staffLang={settings.staffLang}
+        onStatusChange={(status) => {
+          if (!selected) return;
+          setRequestStatus(selected, status);
+          select(selected.id);
+        }}
+        onAssign={(assignee) => {
+          if (!selected) return;
+          assignRequest(selected, assignee);
+          select(selected.id);
+        }}
+        onSend={(message) => {
+          if (!selected) return;
+          sendReply(selected, message);
+          select(selected.id);
+        }}
+        onAddNote={(text) => {
+          if (!selected) return;
+          addInternalNote(selected, text);
+          select(selected.id);
+        }}
+        onCloseRoom={() => {
+          if (!selected) return;
+          closeRoom(selected.room);
+          setSelectedId(null);
+        }}
       />
     </div>
   );

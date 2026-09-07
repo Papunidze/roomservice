@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { customGuestLanguage, guestLanguage } from "@/features/requests";
+import { guestLanguage } from "@/features/requests";
 
 import {
   checkoutRequest,
@@ -71,20 +71,35 @@ describe("problemRequest", () => {
   });
 });
 
+const catalogueItem = (key: string) => ({ key, label: key, available: true });
+
 describe("itemsRequest", () => {
-  it("lists only items with a positive count", () => {
-    const [message] = itemsRequest(arabicGuest, {
-      towels: 2,
-      pillow: 0,
-      iron: 1,
-    }).thread;
+  it("translates catalogue items into every language", () => {
+    const [message] = itemsRequest(arabicGuest, [
+      { item: catalogueItem("towels"), count: 2 },
+      { item: catalogueItem("iron"), count: 1 },
+    ]).thread;
 
     expect(message?.translations.en).toBe("Towels ×2, Iron ×1");
     expect(message?.translations.ru).toBe("Полотенца ×2, Утюг ×1");
   });
 
+  it("passes items added in settings through untranslated", () => {
+    const [message] = itemsRequest(arabicGuest, [
+      {
+        item: { key: "custom-yoga-mat", label: "Yoga mat", available: true },
+        count: 1,
+      },
+    ]).thread;
+
+    expect(message?.translations.en).toBe("Yoga mat ×1");
+    expect(message?.translations.ru).toBe("Yoga mat ×1");
+  });
+
   it("is always a low-urgency item request", () => {
-    const request = itemsRequest(arabicGuest, { towels: 1 });
+    const request = itemsRequest(arabicGuest, [
+      { item: catalogueItem("towels"), count: 1 },
+    ]);
 
     expect(request.category).toBe("items");
     expect(request.urgency).toBe("low");
@@ -114,20 +129,5 @@ describe("checkoutRequest", () => {
 
     expect(message?.translations.en).toBe("Late checkout — 14:00");
     expect(message?.translations.tr).toBe("Geç çıkış — 14:00");
-  });
-});
-
-describe("custom languages", () => {
-  it("falls back to English text and detects RTL scripts", () => {
-    const language = customGuestLanguage("فارسی");
-    const [message] = problemRequest(
-      { room: "205", language },
-      { keys: ["tv"], note: "", photo: false },
-    ).thread;
-
-    expect(language.dir).toBe("rtl");
-    expect(language.code).toBe("XX");
-    expect(message?.lang).toBe("en");
-    expect(message?.text).toBe("TV");
   });
 });

@@ -18,17 +18,26 @@ Two surfaces:
 2. **Front desk** (`/desk`, `/desk/analytics`) — grouped inbox, dual-language
    conversation, status and assignee, translated composer, analytics.
 
-Languages: Arabic, Russian, Turkish, English, Georgian, plus a free-text
-"other language" that falls back to English copy. Arabic is RTL throughout.
+Languages: 16 shipped — Arabic, Persian, Turkish, Russian, Ukrainian, Hebrew,
+English, German, French, Italian, Spanish, Polish, Portuguese (Brazil), Hindi,
+Chinese and Georgian. Arabic, Persian and Hebrew are RTL. There is no
+free-text "other language": a guest picks from the list, and English is the
+fallback for anyone whose language is not on it. Which languages guests
+actually see is a per-hotel setting; the picker, the QR plate and the language
+sheet all render from that list.
 Currency: GEL (₾), stored as integer tetri.
 
 ## Current state
 
-The UI is complete and driven by static demo data. There is no backend: the
-request list lives in a client-side store (`features/requests/store.ts`) built
-on `useSyncExternalStore` + localStorage, so a request sent from `/r/205`
-shows up on `/desk` in the same browser. "Translation" is a lookup table in
-`shared/i18n/dictionary.ts`, not a model call.
+The UI is complete and driven by static demo data. There is no backend: every
+mutable slice lives in a client-side store built on `useSyncExternalStore` +
+localStorage via `shared/lib/store.ts`, so a request sent from `/r/205` shows
+up on `/desk` in the same browser. There are four such stores — requests,
+settings (both in `features/requests`), rooms, and team. "Translation" is a
+lookup table in `shared/i18n/dictionary.ts`, not a model call.
+
+The front desk is one console at `/desk` with five sections: Inbox, Rooms,
+Team, Analytics, Settings.
 
 `supabase/` and `shared/types/supabase.ts` still hold the schema of the
 previous product (a salon booking SaaS) and do not describe RoomCall. Do not
@@ -51,18 +60,23 @@ thin route files that import from `features/`.
 app/
   page.tsx                    redirects to /desk
   r/[room]/page.tsx           -> features/guest
-  desk/layout.tsx             console frame + header
+  desk/layout.tsx             console frame + header + overlays
   desk/page.tsx               -> features/desk (inbox)
+  desk/rooms/page.tsx         -> features/rooms
+  desk/team/page.tsx          -> features/team
   desk/analytics/page.tsx     -> features/desk (analytics)
+  desk/settings/page.tsx      -> features/settings
 
 features/
   requests/                   the shared domain
-    types.ts                  Request, Message, Category, Status, Urgency
-    schemas.ts                Zod schema for persisted state
+    types.ts                  Request, Message, Category, Status, Urgency, staff
+    schemas.ts                Zod schemas for persisted state
     catalog.ts                categories, icons, items, dishes, hotel facts
     language.ts               GuestLanguage helpers, resolveText, translateAll
+    settings.ts               Settings shape + seed (read by both surfaces)
+    settings-store.ts         hotel profile, guest languages, categories, items
     demo-data.ts              seed requests + analytics figures
-    store.ts                  client store (useSyncExternalStore + localStorage)
+    store.ts                  request store
     index.ts                  public API
   guest/
     components/               one file per screen
@@ -71,16 +85,28 @@ features/
     screens.ts                GuestScreen union
     index.ts
   desk/
-    components/               header, list, conversation, composer, analytics
-    initials.ts
+    actions.ts                reply / note / assign / status / close room
+    components/               header, filters, list, conversation, composer,
+                              thread messages, analytics
     index.ts
+  rooms/
+    seed.ts, store.ts         rooms, floors, QR state, guest sessions
+    plate-pattern.ts          pure: deterministic placeholder plate artwork
+    components/               table, QR plate panel, add-rooms modal
+  team/
+    store.ts                  members, routing rules, escalation
+    components/               table, routing, escalation, invite modal
+  settings/
+    components/               six panels + the settings shell
 
 shared/
   i18n/
     dictionary.ts             DICTIONARY (5 languages) + Phrases
     canned.ts                 quick replies in every language
     script.ts                 script -> font class, RTL detection
-  lib/                        cn, money
+  lib/                        cn, money, initials, store factory
+  ui/                         console primitives: Button, Chip, Switch, Modal,
+                              Avatar, Field, toast + confirm hosts
   types/                      stale Supabase types only
 ```
 
@@ -95,6 +121,11 @@ Rules:
 - A route file in `app/` should be < 30 lines.
 - Do not create new top-level folders. New capability = new folder in
   `features/`.
+- Configuration both surfaces read (hotel profile, guest info, enabled
+  languages, categories, item menu) lives in `features/requests` — the guest
+  app must never import the console features. `features/settings` is UI only.
+- Anything shared by two console features goes in `shared/ui`; `shared/ui`
+  stays free of domain knowledge (pass names and labels in as props).
 
 ## Conventions
 
@@ -107,14 +138,23 @@ Rules:
 - Guest-facing strings come from `shared/i18n/dictionary.ts` — never hardcode
   them in a component. Two exceptions: the front-desk UI is English and can be
   inline, and the language picker at `/r/[room]` is English by design because
-  it runs before the guest has chosen a language.
+  it runs before the guest has chosen a language — that screen searches on the
+  language's own name, its English name and its code, diacritic-insensitively
+  (`matchesLanguage`), and suggests the device language from
+  `navigator.languages`.
+- The guest thread renders only `isGuestVisible` messages. System lines and
+  internal notes are console-only and must never reach `/r/[room]`.
 - Never claim a translation the code did not produce. Free text is passed
   through untranslated; `resolveText` returns the language it actually
   resolved to, and callers must render `dir`/`scriptFont` for _that_ language
   and label it accordingly.
 - Every language-bearing element sets `dir` and the matching font class via
-  `scriptFont(lang)`. Arabic must render RTL with IBM Plex Sans Arabic,
-  Georgian with Noto Sans Georgian.
+  `scriptFont(lang)`. Arabic and Persian use IBM Plex Sans Arabic, Hebrew Noto
+  Sans Hebrew, Hindi Noto Sans Devanagari, Georgian Noto Sans Georgian, and
+  Chinese the system CJK stack (`--font-cjk`) — no multi-megabyte CJK download.
+- Adding a language means: a code in `LANGUAGES`, a complete `Phrases` entry,
+  three `CANNED` replies, a `SCRIPT_FONT` entry, and a font in `app/layout.tsx`
+  if the script is new. TypeScript fails the build until all four are done.
 - Tests for: request building, translation lookup, availability-style pure
   logic. UI tests are optional for now.
 

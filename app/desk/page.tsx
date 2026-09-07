@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Inbox · RoomCall",
 };
 
-export default function Page() {
-  return <DeskInbox />;
+export default async function Page({ searchParams }: PageProps<"/desk">) {
+  const { room } = await searchParams;
+  return <DeskInbox initialRoom={typeof room === "string" ? room : ""} />;
 }

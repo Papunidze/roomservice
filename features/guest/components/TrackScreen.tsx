@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { resolveText, type Request } from "@/features/requests";
+import { isGuestVisible, resolveText, type Request } from "@/features/requests";
 import {
   DICTIONARY,
   scriptFont,
@@ -109,7 +109,7 @@ export function TrackScreen({
       </div>
 
       <div className="mt-7 flex flex-col gap-3.5 border-t border-line pt-5.5">
-        {request.thread.map((message, index) => {
+        {request.thread.filter(isGuestVisible).map((message, index) => {
           const mine = message.from === "guest";
           const shown = mine
             ? { text: message.text, lang: message.lang }

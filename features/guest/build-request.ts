@@ -1,16 +1,21 @@
 import {
-  ITEM_KEYS,
+  itemLabel,
   URGENT_PROBLEMS,
   translateAll,
   type CheckoutOption,
   type Dish,
   type GuestLanguage,
-  type ItemKey,
+  type MenuItem,
   type ProblemKey,
   type Request,
 } from "@/features/requests";
 import { DICTIONARY, type LangCode } from "@/shared/i18n";
 import { formatGel } from "@/shared/lib/money";
+
+export interface ItemPick {
+  item: MenuItem;
+  count: number;
+}
 
 type Draft = Omit<Request, "id">;
 
@@ -70,17 +75,13 @@ export function problemRequest(
   });
 }
 
-export function itemsRequest(
-  base: Base,
-  counts: Partial<Record<ItemKey, number>>,
-) {
-  const picked = ITEM_KEYS.filter((key) => (counts[key] ?? 0) > 0);
+export function itemsRequest(base: Base, picks: ItemPick[]) {
   return draft(base, {
     category: "items",
     urgency: "low",
     build: (lang) =>
-      picked
-        .map((key) => `${DICTIONARY[lang][key]} ×${counts[key]}`)
+      picks
+        .map((pick) => `${itemLabel(pick.item, lang)} ×${pick.count}`)
         .join(", "),
   });
 }
