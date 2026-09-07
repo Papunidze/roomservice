@@ -8,6 +8,9 @@ needs — UI, pure logic, tests — lives in one folder. There is no global
 
 ```
 app/            routes only, no business logic
+  page.tsx      public landing page
+  sign-in/      sign-in form
+  sign-up/      hotel setup form
   r/[room]/     guest request app
   desk/         front-desk console (inbox, rooms, team, analytics, settings)
 
@@ -42,6 +45,15 @@ features/desk/           inbox + analytics, and the console frame
 features/rooms/          rooms, QR plates, guest sessions
 features/team/           members, routing rules, escalation, invites
 features/settings/       the six settings panels (UI only)
+
+features/auth/           sign in, hotel setup, the staff session
+  credentials.ts         pure: form values -> field errors, email -> display name
+  credentials.test.ts
+  store.ts               the session store
+  components/            shell, fields, the two forms
+
+features/marketing/      the public landing page
+  components/            header, hero, sections, footer
 ```
 
 Rules:
@@ -67,7 +79,8 @@ only; it holds no state of its own.
 ## State
 
 There is no backend yet. `shared/lib/store.ts` is a small factory over
-`useSyncExternalStore`; four stores use it (requests, settings, rooms, team):
+`useSyncExternalStore`; five stores use it (requests, settings, rooms, team,
+session):
 
 - `getServer` returns the seed so SSR and hydration agree.
 - `get` returns a cached array reference, so React never loops.
@@ -77,13 +90,28 @@ There is no backend yet. `shared/lib/store.ts` is a small factory over
   keeps two tabs in sync — this is what makes the guest → desk hand-off
   visible without a server.
 
-When a real backend arrives, these four stores are the seam to replace.
+When a real backend arrives, these five stores are the seam to replace.
 
 Do not put a `useSyncExternalStore` consumer inside a `<Suspense>` boundary
 that its sibling is outside of: the boundary hydrates separately and can stay
 pinned to the server snapshot while the rest of the tree reads localStorage,
 so two panels of the same console disagree. Read search params on the server
 and pass them down instead.
+
+## Auth
+
+There is no server, so there is nothing to authenticate against. `features/auth`
+validates the form with Zod, derives a display name from the email and writes a
+`Session` to a fifth persisted store; `/desk` reads it for the header name,
+avatar and account menu. Both forms say plainly that no credentials leave the
+browser — do not dress this up as real auth in the UI.
+
+`/desk` is deliberately **not** gated. A client-side guard would flash the
+console before redirecting, and the demo has to stay openable from a link. Route
+protection belongs with the real backend, in middleware, not here.
+
+Signing up writes the hotel name straight into the settings store, so the name
+the operator types is the one the console and the QR plates show.
 
 ## Threads
 

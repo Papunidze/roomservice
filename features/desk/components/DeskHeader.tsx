@@ -1,10 +1,11 @@
 "use client";
 
-import { Bell, BellOff, CreditCard, Hotel, LogOut } from "lucide-react";
+import { Bell, BellOff, CreditCard, Hotel, LogIn, LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { signOut, useSession } from "@/features/auth";
 import {
   FRONT_DESK_AGENT,
   updateSettings,
@@ -28,13 +29,18 @@ const MENU_ITEM =
 export function DeskHeader() {
   const requests = useRequests();
   const settings = useSettings();
+  const session = useSession();
   const pathname = usePathname();
+  const router = useRouter();
   const [isAlertsOn, setIsAlertsOn] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const newCount = requests.filter(
     (request) => !request.archived && request.status === "new",
   ).length;
+
+  const agent = session?.name ?? FRONT_DESK_AGENT;
+  const email = session?.email ?? "nino@batumipalace.ge";
 
   return (
     <div className="relative flex items-center gap-5 border-b border-line bg-surface px-6.5 py-3.5">
@@ -43,9 +49,7 @@ export function DeskHeader() {
         <span className="text-[15px] font-semibold tracking-[-0.02em]">
           {settings.hotel.name}
         </span>
-        <span className="text-[13px] text-faint">
-          {FRONT_DESK_AGENT} · Front desk
-        </span>
+        <span className="text-[13px] text-faint">{agent} · Front desk</span>
       </div>
 
       <nav className="mx-auto flex gap-0.5 rounded-full bg-ink/5 p-[3px]">
@@ -104,7 +108,7 @@ export function DeskHeader() {
             isMenuOpen && "ring-1 ring-sage",
           )}
         >
-          <Avatar name={FRONT_DESK_AGENT} className="size-9.5 text-xs" />
+          <Avatar name={agent} className="size-9.5 text-xs" />
         </button>
       </div>
 
@@ -118,9 +122,9 @@ export function DeskHeader() {
           />
           <div className="animate-rise absolute top-14.5 right-6.5 z-50 w-68 rounded-tile border border-line-strong bg-surface p-2">
             <div className="border-b border-line-soft px-3 pt-2.5 pb-3">
-              <div className="text-sm font-semibold">{FRONT_DESK_AGENT}</div>
+              <div className="text-sm font-semibold">{agent}</div>
               <div className="mt-0.5 text-[12.5px] text-faint">
-                Front desk · nino@batumipalace.ge
+                Front desk · {email}
               </div>
             </div>
 
@@ -152,17 +156,29 @@ export function DeskHeader() {
               />
               Billing
             </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setIsMenuOpen(false);
-                showToast("Signed out on this device (demo build)");
-              }}
-              className={MENU_ITEM}
-            >
-              <LogOut strokeWidth={1.5} className="size-[15px] text-muted" />
-              Sign out
-            </button>
+            {session ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  signOut();
+                  router.push("/");
+                }}
+                className={MENU_ITEM}
+              >
+                <LogOut strokeWidth={1.5} className="size-[15px] text-muted" />
+                Sign out
+              </button>
+            ) : (
+              <Link
+                href="/sign-in"
+                onClick={() => setIsMenuOpen(false)}
+                className={MENU_ITEM}
+              >
+                <LogIn strokeWidth={1.5} className="size-[15px] text-muted" />
+                Sign in
+              </Link>
+            )}
           </div>
         </>
       ) : null}

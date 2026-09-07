@@ -11,12 +11,14 @@ a request — a broken AC, extra towels, room service, late checkout. The front
 desk sees it immediately in their own language and answers back in the
 guest's.
 
-Two surfaces:
+Three surfaces:
 
 1. **Guest** (`/r/[room]`) — mobile-first, no app, no account. Language
    picker, request screens, live tracking with a reply thread.
 2. **Front desk** (`/desk`, `/desk/analytics`) — grouped inbox, dual-language
    conversation, status and assignee, translated composer, analytics.
+3. **Public** (`/`, `/sign-in`, `/sign-up`) — the landing page explaining the
+   product, and the two staff forms.
 
 Languages: 16 shipped — Arabic, Persian, Turkish, Russian, Ukrainian, Hebrew,
 English, German, French, Italian, Spanish, Polish, Portuguese (Brazil), Hindi,
@@ -32,9 +34,14 @@ Currency: GEL (₾), stored as integer tetri.
 The UI is complete and driven by static demo data. There is no backend: every
 mutable slice lives in a client-side store built on `useSyncExternalStore` +
 localStorage via `shared/lib/store.ts`, so a request sent from `/r/205` shows
-up on `/desk` in the same browser. There are four such stores — requests,
-settings (both in `features/requests`), rooms, and team. "Translation" is a
-lookup table in `shared/i18n/dictionary.ts`, not a model call.
+up on `/desk` in the same browser. There are five such stores — requests,
+settings (both in `features/requests`), rooms, team, and the staff session.
+"Translation" is a lookup table in `shared/i18n/dictionary.ts`, not a model
+call.
+
+Sign-in is a demo: the form is validated, a session is written to localStorage
+and the desk header reads it, but no credentials leave the browser and `/desk`
+is not gated. Both forms say so on screen — never imply otherwise.
 
 The front desk is one console at `/desk` with five sections: Inbox, Rooms,
 Team, Analytics, Settings.
@@ -58,7 +65,9 @@ thin route files that import from `features/`.
 
 ```
 app/
-  page.tsx                    redirects to /desk
+  page.tsx                    -> features/marketing (landing)
+  sign-in/page.tsx            -> features/auth
+  sign-up/page.tsx            -> features/auth
   r/[room]/page.tsx           -> features/guest
   desk/layout.tsx             console frame + header + overlays
   desk/page.tsx               -> features/desk (inbox)
@@ -98,6 +107,13 @@ features/
     components/               table, routing, escalation, invite modal
   settings/
     components/               six panels + the settings shell
+  auth/
+    credentials.ts            pure: form values -> field errors
+    credentials.test.ts
+    store.ts                  the staff session
+    components/               shell, fields, sign-in and sign-up forms
+  marketing/
+    components/               landing header, hero, sections, footer
 
 shared/
   i18n/
