@@ -3,111 +3,83 @@
 ## Feature-based layout
 
 Code is organised by **feature**, not by technical layer. Everything a feature
-needs — UI, server actions, queries, schemas, pure logic, tests — lives in one
-folder. There is no global `components/`, `hooks/` or `services/` directory.
+needs — UI, pure logic, tests — lives in one folder. There is no global
+`components/` or `hooks/` directory.
 
 ```
 app/            routes only, no business logic
-  (marketing)/  landing, pricing, legal
-  (auth)/       login, register, forgot-password, verify
-  (app)/        authenticated shell
-  (sites)/      tenant public websites
-  api/          webhooks and cron only
+  r/[room]/     guest request app
+  desk/         front-desk console (inbox + analytics)
 
 features/       one folder per feature, each with an index.ts public API
-shared/         design-system primitives, layout, lib, i18n, generated types
-supabase/       migrations and seed
+shared/         i18n dictionary and small libs
+supabase/       stale — schema of the previous product, see below
 docs/
 ```
 
-A feature folder looks like this:
+## Features
 
 ```
-features/bookings/
-  components/        BookingCalendar, BookingRow, BookingSheet...
-  actions.ts         server actions (create / cancel / confirm)
-  queries.ts         data access — the only file that touches Supabase
-  schemas.ts         Zod schemas + inferred types
-  availability.ts    pure slot/conflict logic, no IO
-  availability.test.ts
-  index.ts           public API of the feature
+features/requests/       the shared domain, imported by both surfaces
+  types.ts               Request, Message, Category, Status, Urgency
+  schemas.ts             Zod schema used to validate persisted state
+  catalog.ts             categories, icons, items, dishes, hotel facts
+  language.ts            GuestLanguage helpers, resolveText, translateAll
+  demo-data.ts           seed requests + analytics figures
+  store.ts               client store
+  index.ts               public API
+
+features/guest/          the QR-scanned guest app
+  components/            one file per screen
+  build-request.ts       pure: form input -> Request draft
+  build-request.test.ts
+  screens.ts             GuestScreen union
+
+features/desk/           the front-desk console
+  components/            header, list, conversation, composer, analytics
+  initials.ts
 ```
 
-## The rules
+Rules:
 
-1. **A feature is reached only through its `index.ts`.** Never
-   `@/features/bookings/queries` from outside `features/bookings/`.
-2. **`shared/` never imports from `features/`.** Dependencies point one way:
-   `app → features → shared`.
-3. **`queries.ts` is the only file in a feature that touches Supabase.**
-4. **Pure logic lives in its own IO-free file** (availability, pricing, prompt
-   building) so it can be unit-tested without mocks.
-5. **A route file in `app/` is thin** — under ~30 lines: fetch through a feature
-   query, render a feature component.
-6. **No new top-level folders.** A new capability is a new folder in
-   `features/`.
+- A feature exports only through its `index.ts`. Other features import from
+  that, never from internal files.
+- Features may import from `shared/` and from other features' `index.ts`.
+  `shared/` never imports from `features/`.
+- Pure logic goes in its own IO-free file so it can be unit-tested.
+- Route files in `app/` stay under 30 lines: read params, render a feature
+  component.
+- No file over ~250 lines.
 
-Rules 1 and 2 are enforced by ESLint (`no-restricted-imports` zones in
-`eslint.config.mjs`), so violations fail `pnpm lint` and CI rather than relying
-on review. That config also blocks relative paths that climb out of a feature,
-so `../../clients/queries` cannot be used to sidestep rule 1.
+## State
 
-Rules 3–6 are conventions — they are reviewed, not compiled.
+There is no backend yet. `features/requests/store.ts` is a module-level store
+built on `useSyncExternalStore`:
 
-## Multi-tenancy
+- `getServerSnapshot` returns `DEMO_REQUESTS` so SSR and hydration agree.
+- `getSnapshot` returns a cached array reference, so React never loops.
+- State is persisted to `localStorage` and validated with Zod on read, so a
+  stale or hand-edited payload falls back to the seed instead of crashing.
+- A `storage` listener (attached on the first subscriber, removed on the last)
+  keeps two tabs in sync — this is what makes the guest → desk hand-off
+  visible without a server.
 
-Every business is a tenant. Every tenant-owned table has `business_id` and
-**Row Level Security enabled**, with policies added in the same migration that
-creates the table. RLS is never disabled, not even temporarily.
+When a real backend arrives, `store.ts` is the single seam to replace.
 
-Policies go through two `security definer` helpers:
+## Translation
 
-- `public.is_business_member(business_id)` — the caller belongs to the tenant
-- `public.is_business_admin(business_id)` — the caller is `owner` or `admin`
+`shared/i18n/dictionary.ts` holds the five supported languages. Every request
+carries a `translations` map filled at creation time by `translateAll`, so
+canned content is genuinely multilingual.
 
-They are `security definer` for a concrete reason: a policy on
-`users_businesses` that queries `users_businesses` directly recurses forever.
-Reading the membership table from inside a definer function breaks that cycle.
+Free-text is **not** translated — there is no model in the loop. `resolveText`
+returns both the string and the language it actually resolved to, and every
+call site renders `dir` + `scriptFont` for that language and labels it
+honestly. Nothing in the UI claims a translation that does not exist.
 
-The `service_role` key bypasses RLS entirely. It is used only in webhook and
-cron handlers, and those must always filter by `business_id` explicitly — RLS
-is not there to catch their mistakes.
+## Stale directories
 
-Membership rows are managed by existing admins. There is deliberately no
-self-insert policy for the first owner of a new business: that row is created
-by onboarding through the service role, so a user cannot mint themselves into
-a tenant.
-
-## Data conventions
-
-| Thing      | Rule                                                    |
-| ---------- | ------------------------------------------------------- |
-| Money      | integer **tetri** (1 ₾ = 100). Never floats.            |
-| Phones     | E.164 (`+995...`), enforced by a check constraint.      |
-| Timestamps | `timestamptz`, stored UTC, displayed in `Asia/Tbilisi`. |
-| Dates      | `date-fns-tz` for display conversion.                   |
-| IDs        | `uuid` with `gen_random_uuid()`.                        |
-| Strings    | user-facing Georgian text lives in `shared/i18n/ka.ts`. |
-
-## Boundaries and validation
-
-Everything crossing into the app is validated with Zod: forms, webhook
-payloads, external API responses, and environment variables
-(`shared/lib/env.ts`, which throws at startup rather than failing later).
-
-Server/client boundaries return typed results rather than throwing:
-
-```ts
-{ ok: true, data } | { ok: false, error: { code, message } }
-```
-
-Server Components are the default; `"use client"` is added only when a
-component genuinely needs interactivity. Mutations from the UI go through
-Server Actions. Route handlers exist only for webhooks, cron and external
-callers.
-
-## Testing
-
-Vitest, with tests co-located next to the code. The things that must be tested
-are the ones where being wrong is expensive: availability/slot logic, billing
-logic, webhook parsers, and AI tool handlers. UI tests are optional for now.
+`supabase/` and `shared/types/supabase.ts` describe the previous product (a
+salon booking SaaS): bookings, businesses, services, Instagram/WhatsApp
+conversations. Nothing in RoomCall references them. Replace rather than extend
+them when backend work starts.

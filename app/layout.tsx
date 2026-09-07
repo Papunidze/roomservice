@@ -1,6 +1,18 @@
 import type { Metadata } from "next";
-import { Noto_Sans_Georgian, Plus_Jakarta_Sans } from "next/font/google";
+import {
+  IBM_Plex_Mono,
+  IBM_Plex_Sans_Arabic,
+  Inter_Tight,
+  Noto_Sans_Georgian,
+} from "next/font/google";
+
 import "./globals.css";
+
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 const notoSansGeorgian = Noto_Sans_Georgian({
   variable: "--font-noto-sans-georgian",
@@ -8,22 +20,31 @@ const notoSansGeorgian = Noto_Sans_Georgian({
   display: "swap",
 });
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta-sans",
+const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
+  variable: "--font-ibm-plex-sans-arabic",
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: "--font-ibm-plex-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Tanda",
-  description: "Tanda",
+  title: "RoomCall",
+  description:
+    "Guests ask for anything in their own language. The front desk reads it in theirs.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="ka"
-      className={`${plusJakartaSans.variable} ${notoSansGeorgian.variable} h-full`}
+      lang="en"
+      className={`${interTight.variable} ${notoSansGeorgian.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} h-full`}
     >
       <body className="min-h-full font-sans antialiased">{children}</body>
     </html>
