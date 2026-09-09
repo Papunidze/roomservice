@@ -59,3 +59,8 @@ export function displayName(email: string) {
 
   return name || email;
 }
+
+export function checkEmail(email: string) {
+  const result = signInSchema.shape.email.safeParse(email);
+  return result.success ? undefined : result.error.issues[0]?.message;
+}

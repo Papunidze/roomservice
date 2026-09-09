@@ -1,46 +1,28 @@
 import type { ReactNode } from "react";
 
-import { cn } from "@/shared/lib/cn";
-
 interface SectionProps {
   id: string;
   eyebrow: string;
   title: string;
-  lead?: string;
-  className?: string;
+  aside?: ReactNode;
   children: ReactNode;
 }
 
-export function Section({
-  id,
-  eyebrow,
-  title,
-  lead,
-  className,
-  children,
-}: SectionProps) {
+export function Section({ id, eyebrow, title, aside, children }: SectionProps) {
   return (
-    <section
-      id={id}
-      className={cn(
-        "scroll-mt-16 border-t border-line py-16 md:py-20",
-        className,
-      )}
-    >
-      <div className="mx-auto max-w-[1120px] px-6">
-        <span className="font-mono text-[10.5px] tracking-[0.16em] text-sage uppercase">
+    <section className="pt-20 md:pt-24">
+      <div id={id} className="scroll-mt-24">
+        <span className="font-mono text-[10.5px] tracking-[0.16em] text-faint uppercase">
           {eyebrow}
         </span>
-        <h2 className="mt-3 max-w-[620px] text-[28px] leading-[1.15] font-semibold tracking-[-0.03em] text-balance md:text-[33px]">
-          {title}
-        </h2>
-        {lead ? (
-          <p className="mt-3.5 max-w-[580px] text-[15px] leading-relaxed text-muted">
-            {lead}
-          </p>
-        ) : null}
-        <div className="mt-10">{children}</div>
+        <div className="mt-3.5 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <h2 className="max-w-[620px] text-[30px] leading-[1.1] font-semibold tracking-[-0.03em] text-pretty md:text-[38px]">
+            {title}
+          </h2>
+          {aside}
+        </div>
       </div>
+      <div className="mt-10">{children}</div>
     </section>
   );
 }

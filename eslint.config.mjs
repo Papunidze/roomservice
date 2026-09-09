@@ -78,6 +78,7 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "next-env.d.ts",
     "supabase/**",
+    "server/**",
   ]),
   {
     files: ["**/*.ts", "**/*.tsx"],

@@ -1,36 +1,24 @@
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export function CallToAction() {
   return (
-    <section className="border-t border-line py-16 md:py-20">
-      <div className="mx-auto max-w-[1120px] px-6">
-        <div className="rounded-card bg-sage-ink px-7 py-12 text-paper md:px-14 md:py-16">
-          <h2 className="max-w-[560px] text-[28px] leading-[1.15] font-semibold tracking-[-0.03em] text-balance md:text-[34px]">
-            Put a plate in every room and the language problem goes away.
-          </h2>
-          <p className="mt-4 max-w-[520px] text-[15px] leading-relaxed text-paper/70">
-            Name your property, print the QR plates from the Rooms screen, and
-            the desk is live. Nothing for the guest to install.
-          </p>
-
-          <div className="mt-9 flex flex-wrap gap-2.5">
-            <Link
-              href="/sign-up"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-paper px-5 text-[13.5px] font-medium text-ink"
-            >
-              Set up your hotel
-              <ArrowRight strokeWidth={1.6} className="size-4" />
-            </Link>
-            <Link
-              href="/sign-in"
-              className="inline-flex min-h-11 items-center rounded-full border border-paper/25 px-5 text-[13.5px] font-medium text-paper/80 transition-colors hover:border-paper/50 hover:text-paper"
-            >
-              Sign in
-            </Link>
-          </div>
-        </div>
+    <section className="mt-20 flex flex-col gap-8 rounded-sheet bg-sage px-7 py-12 text-paper md:mt-22 md:flex-row md:items-center md:justify-between md:px-12 md:py-14">
+      <div>
+        <h2 className="text-[28px] leading-[1.1] font-semibold tracking-[-0.03em] md:text-[34px]">
+          Print the codes tonight.
+          <br />
+          Answer your first guest tomorrow.
+        </h2>
+        <p className="mt-3 text-[15px] text-paper/75">
+          30 days free · no card · cancel any time
+        </p>
       </div>
+      <Link
+        href="/sign-up"
+        className="inline-flex min-h-14 shrink-0 items-center self-start rounded-full bg-paper px-7 text-[16px] font-medium text-ink md:self-auto"
+      >
+        Start free trial
+      </Link>
     </section>
   );
 }

@@ -1,48 +1,46 @@
-import { Hotel } from "lucide-react";
 import Link from "next/link";
 
+import { Wordmark } from "@/shared/ui";
+
+import { SectionLink } from "./SectionLink";
+
 const LINKS = [
-  { href: "#how", label: "How it works" },
-  { href: "#languages", label: "Languages" },
-  { href: "#desk", label: "Front desk" },
-];
+  { href: "/#how", label: "How it works" },
+  { href: "/#pricing", label: "Pricing" },
+  { href: "/#faq", label: "FAQ" },
+] as const;
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-canvas/85 backdrop-blur">
-      <div className="mx-auto flex max-w-[1120px] items-center gap-3 px-6 py-3.5 md:gap-6">
-        <Link href="/" className="flex items-center gap-2.5">
-          <Hotel strokeWidth={1.4} className="size-[19px]" />
-          <span className="text-[15px] font-semibold tracking-[-0.02em]">
-            RoomCall
-          </span>
-        </Link>
+    <header className="sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur">
+      <div className="mx-auto flex max-w-[1200px] items-center gap-7 px-6 py-3.5 md:px-8 md:py-4">
+        <Wordmark />
 
-        <nav className="mx-auto hidden gap-1 md:flex">
+        <nav className="ms-6 hidden gap-6 text-[14px] text-muted md:flex">
           {LINKS.map((link) => (
-            <a
+            <SectionLink
               key={link.href}
               href={link.href}
-              className="flex min-h-8.5 items-center rounded-full px-3.5 text-[13px] text-muted transition-colors hover:text-ink"
+              className="transition-colors hover:text-ink"
             >
               {link.label}
-            </a>
+            </SectionLink>
           ))}
         </nav>
 
-        <div className="ms-auto flex items-center gap-2 md:ms-0">
+        <div className="ms-auto flex items-center gap-2">
           <Link
             href="/sign-in"
-            className="flex min-h-9.5 items-center rounded-full px-3.5 text-[13px] font-medium text-muted transition-colors hover:text-ink"
+            className="hidden min-h-11 items-center rounded-full border border-line-strong px-4.5 text-[14px] font-medium transition-colors hover:border-ink md:inline-flex"
           >
             Sign in
           </Link>
           <Link
-            href="/desk"
-            className="flex min-h-9.5 items-center rounded-full bg-ink px-4 text-[13px] font-medium whitespace-nowrap text-paper"
+            href="/sign-up"
+            className="inline-flex min-h-11 items-center rounded-full bg-ink px-4.5 text-[14px] font-medium whitespace-nowrap text-paper md:px-5"
           >
-            <span className="hidden sm:inline">Open the console</span>
-            <span className="sm:hidden">Console</span>
+            <span className="sm:hidden">Start trial</span>
+            <span className="hidden sm:inline">Start free trial</span>
           </Link>
         </div>
       </div>

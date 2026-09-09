@@ -136,7 +136,10 @@ Rules:
   no IO so it can be unit-tested.
 - A route file in `app/` should be < 30 lines.
 - Do not create new top-level folders. New capability = new folder in
-  `features/`.
+  `features/`. The one exception is `server/` — the Express + MongoDB API, a
+  separate package with its own `package.json`, tsconfig and deploy. The root
+  tsconfig excludes it and the root eslint ignores it; run its checks from
+  inside the folder.
 - Configuration both surfaces read (hotel profile, guest info, enabled
   languages, categories, item menu) lives in `features/requests` — the guest
   app must never import the console features. `features/settings` is UI only.

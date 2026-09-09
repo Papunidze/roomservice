@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
@@ -15,6 +15,7 @@ import {
 } from "../credentials";
 import { signIn } from "../store";
 import { AuthField, PasswordField } from "./AuthField";
+import { AuthLink } from "./AuthLink";
 
 export function SignUpForm() {
   const router = useRouter();
@@ -41,17 +42,17 @@ export function SignUpForm() {
   return (
     <form onSubmit={submit} noValidate>
       <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.03em]">
-        Set up your hotel
+        Start your free trial
       </h1>
-      <p className="mt-2 mb-8 text-sm leading-relaxed text-muted">
-        Name the property, print the room plates, and the desk is live.
+      <p className="mt-2 text-[14.5px] leading-relaxed text-soft">
+        30 days, every feature, no card. You will be the hotel&apos;s first
+        manager.
       </p>
 
-      <div className="flex flex-col gap-4">
+      <div className="mt-8 flex flex-col gap-4">
         <AuthField
           label="Your name"
           autoComplete="name"
-          placeholder="Nino Tsereteli"
           value={name}
           error={errors.name}
           onChange={setName}
@@ -59,7 +60,6 @@ export function SignUpForm() {
         <AuthField
           label="Hotel name"
           autoComplete="organization"
-          placeholder="Batumi Palace"
           value={hotel}
           error={errors.hotel}
           onChange={setHotel}
@@ -68,7 +68,6 @@ export function SignUpForm() {
           label="Work email"
           type="email"
           autoComplete="username"
-          placeholder="nino@batumipalace.ge"
           value={email}
           error={errors.email}
           onChange={setEmail}
@@ -81,20 +80,17 @@ export function SignUpForm() {
           error={errors.password}
           onChange={setPassword}
         />
+        <Button type="submit" className="mt-2 min-h-13 w-full text-[15px]">
+          Create hotel
+          <ArrowRight strokeWidth={1.6} className="size-4" />
+        </Button>
       </div>
 
-      <Button type="submit" className="mt-7 min-h-12 w-full text-sm">
-        Create the desk
-      </Button>
-
-      <p className="mt-5 text-center text-[13px] text-muted">
-        Already set up?{" "}
-        <Link href="/sign-in" className="font-medium text-sage underline">
-          Sign in
-        </Link>
+      <p className="mt-7 text-center text-[14px] text-soft">
+        Already on RoomCall? <AuthLink href="/sign-in">Sign in</AuthLink>
       </p>
 
-      <p className="mt-8 rounded-tile border border-dashed border-line-dashed px-4 py-3.5 text-[12px] leading-relaxed text-faint">
+      <p className="mt-8 border-t border-line-soft pt-5 text-[12px] leading-relaxed text-faint">
         Demo build — nothing is sent anywhere. The hotel name you type replaces
         the demo one in Settings, and the session is kept in this browser only.
       </p>

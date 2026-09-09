@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
@@ -15,6 +15,7 @@ import {
 } from "../credentials";
 import { signIn } from "../store";
 import { AuthField, PasswordField } from "./AuthField";
+import { AuthLink } from "./AuthLink";
 
 export function SignInForm() {
   const router = useRouter();
@@ -42,18 +43,17 @@ export function SignInForm() {
   return (
     <form onSubmit={submit} noValidate>
       <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.03em]">
-        Sign in to your desk
+        Sign in
       </h1>
-      <p className="mt-2 mb-8 text-sm leading-relaxed text-muted">
-        The console where guest requests arrive, get assigned and get answered.
+      <p className="mt-2 text-[14.5px] leading-relaxed text-soft">
+        Staff of a hotel already on RoomCall? Use your work email.
       </p>
 
-      <div className="flex flex-col gap-4">
+      <div className="mt-8 flex flex-col gap-4">
         <AuthField
           label="Work email"
           type="email"
           autoComplete="username"
-          placeholder="nino@batumipalace.ge"
           value={email}
           error={errors.email}
           onChange={setEmail}
@@ -61,24 +61,22 @@ export function SignInForm() {
         <PasswordField
           label="Password"
           autoComplete="current-password"
+          hint={<AuthLink href="/forgot-password">Forgot password?</AuthLink>}
           value={password}
           error={errors.password}
           onChange={setPassword}
         />
+        <Button type="submit" className="mt-2 min-h-13 w-full text-[15px]">
+          Sign in
+          <ArrowRight strokeWidth={1.6} className="size-4" />
+        </Button>
       </div>
 
-      <Button type="submit" className="mt-7 min-h-12 w-full text-sm">
-        Sign in
-      </Button>
-
-      <p className="mt-5 text-center text-[13px] text-muted">
-        No account yet?{" "}
-        <Link href="/sign-up" className="font-medium text-sage underline">
-          Set up your hotel
-        </Link>
+      <p className="mt-7 text-center text-[14px] text-soft">
+        New hotel? <AuthLink href="/sign-up">Start a free trial</AuthLink>
       </p>
 
-      <p className="mt-8 rounded-tile border border-dashed border-line-dashed px-4 py-3.5 text-[12px] leading-relaxed text-faint">
+      <p className="mt-8 border-t border-line-soft pt-5 text-[12px] leading-relaxed text-faint">
         Demo build — there is no server behind this form. Any valid email and an
         eight-character password sign you in, and the session is kept in this
         browser only.

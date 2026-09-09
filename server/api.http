@@ -1,0 +1,52 @@
+@host = http://localhost:4000
+@email = nino@batumipalace.ge
+@password = not-a-real-password
+
+### health
+GET {{host}}/health
+
+### register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Nino Tsereteli",
+  "hotel": "Batumi Palace",
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### me
+GET {{host}}/api/auth/me
+
+### logout
+POST {{host}}/api/auth/logout
+
+### login with a wrong password -> 401
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "wrong-password"
+}
+
+### register with a short password -> 400 with per-field messages
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Giga",
+  "hotel": "Enter your hotel name",
+  "email": "test@gmail.com",
+  "password": "test12345680"
+}
