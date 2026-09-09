@@ -50,17 +50,12 @@ export function hasErrors(errors: SignUpErrors) {
   return Object.keys(errors).length > 0;
 }
 
-export function displayName(email: string) {
-  const name = (email.split("@")[0] ?? "")
-    .split(/[._-]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-
-  return name || email;
-}
-
 export function checkEmail(email: string) {
   const result = signInSchema.shape.email.safeParse(email);
+  return result.success ? undefined : result.error.issues[0]?.message;
+}
+
+export function checkPassword(password: string) {
+  const result = signInSchema.shape.password.safeParse(password);
   return result.success ? undefined : result.error.issues[0]?.message;
 }

@@ -11,6 +11,8 @@ export async function connectDb() {
   await client.connect();
   db = client.db(env.MONGODB_DB);
   await users().createIndex({ email: 1 }, { unique: true });
+  await users().createIndex({ googleId: 1 }, { unique: true, sparse: true });
+  await users().createIndex({ "passwordReset.tokenHash": 1 }, { sparse: true });
 }
 
 export async function closeDb() {

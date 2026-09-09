@@ -22,3 +22,17 @@ export const invalidCredentials = () =>
 
 export const emailTaken = () =>
   new HttpError(409, "email_taken", "That email is already registered");
+
+export const invalidResetToken = () =>
+  new HttpError(
+    400,
+    "invalid_token",
+    "That reset link is invalid or has expired. Request a new one.",
+  );
+
+export const googleNotConfigured = () =>
+  new HttpError(
+    503,
+    "google_not_configured",
+    "Google sign-in is not configured on this server",
+  );

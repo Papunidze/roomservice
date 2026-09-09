@@ -31,17 +31,24 @@ Currency: GEL (₾), stored as integer tetri.
 
 ## Current state
 
-The UI is complete and driven by static demo data. There is no backend: every
-mutable slice lives in a client-side store built on `useSyncExternalStore` +
+The UI is complete and driven by static demo data. Apart from auth there is
+no backend: every mutable slice lives in a client-side store built on `useSyncExternalStore` +
 localStorage via `shared/lib/store.ts`, so a request sent from `/r/205` shows
 up on `/desk` in the same browser. There are five such stores — requests,
 settings (both in `features/requests`), rooms, team, and the staff session.
 "Translation" is a lookup table in `shared/i18n/dictionary.ts`, not a model
 call.
 
-Sign-in is a demo: the form is validated, a session is written to localStorage
-and the desk header reads it, but no credentials leave the browser and `/desk`
-is not gated. Both forms say so on screen — never imply otherwise.
+Auth is real and lives in `server/` (Express + MongoDB): register, login,
+logout, Google OAuth, forgot/reset password. The session is an HttpOnly cookie
+set by the API; the app calls the API origin directly with
+`credentials: "include"` (`NEXT_PUBLIC_API_ORIGIN`, default
+`http://localhost:4000`) through `features/auth/api.ts`, which is the only
+place that talks to it. `features/auth/store.ts` keeps a localStorage copy of
+the public user for instant header rendering; `AuthGate` in the desk layout
+re-checks `/api/auth/me` on mount and sends anonymous visitors to `/sign-in`.
+Everything else (requests, rooms, team, settings) is still client-side demo
+data.
 
 The front desk is one console at `/desk` with five sections: Inbox, Rooms,
 Team, Analytics, Settings.

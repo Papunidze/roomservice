@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 
 import { createStore } from "@/shared/lib/store";
 
+import { logout } from "./api";
 import { sessionSchema } from "./schemas";
 import type { Session } from "./types";
 
@@ -22,4 +23,5 @@ export function signIn(session: Session) {
 
 export function signOut() {
   store.set(null);
+  void logout();
 }

@@ -1,42 +1,52 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { useSettings } from "@/features/requests";
-import { Button, showToast } from "@/shared/ui";
+import { Button } from "@/shared/ui";
 
-import {
-  checkSignIn,
-  displayName,
-  hasErrors,
-  type SignInErrors,
-} from "../credentials";
+import { login } from "../api";
+import { checkSignIn, hasErrors, type SignInErrors } from "../credentials";
 import { signIn } from "../store";
 import { AuthField, PasswordField } from "./AuthField";
 import { AuthLink } from "./AuthLink";
+import { FormError } from "./FormError";
+import { GoogleButton } from "./GoogleButton";
+
+const GOOGLE_FAILED =
+  "Google sign-in did not complete. Try again or use your password.";
 
 export function SignInForm() {
   const router = useRouter();
-  const settings = useSettings();
+  const hadGoogleError = useSearchParams().get("error") === "google";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<SignInErrors>({});
+  const [formError, setFormError] = useState(
+    hadGoogleError ? GOOGLE_FAILED : undefined,
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
 
     const found = checkSignIn({ email, password });
     setErrors(found);
+    setFormError(undefined);
     if (hasErrors(found)) return;
 
-    signIn({
-      name: displayName(email),
-      email,
-      hotel: settings.hotel.name,
-    });
-    showToast(`Signed in as ${email}`);
+    setIsSubmitting(true);
+    const result = await login({ email, password });
+    setIsSubmitting(false);
+
+    if (!result.ok) {
+      setErrors(result.fields);
+      setFormError(result.message);
+      return;
+    }
+
+    signIn(result.data);
     router.push("/desk");
   }
 
@@ -50,6 +60,7 @@ export function SignInForm() {
       </p>
 
       <div className="mt-8 flex flex-col gap-4">
+        <FormError message={formError} />
         <AuthField
           label="Work email"
           type="email"
@@ -66,20 +77,20 @@ export function SignInForm() {
           error={errors.password}
           onChange={setPassword}
         />
-        <Button type="submit" className="mt-2 min-h-13 w-full text-[15px]">
-          Sign in
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="mt-2 min-h-13 w-full text-[15px]"
+        >
+          {isSubmitting ? "Signing in…" : "Sign in"}
           <ArrowRight strokeWidth={1.6} className="size-4" />
         </Button>
       </div>
 
+      <GoogleButton />
+
       <p className="mt-7 text-center text-[14px] text-soft">
         New hotel? <AuthLink href="/sign-up">Start a free trial</AuthLink>
-      </p>
-
-      <p className="mt-8 border-t border-line-soft pt-5 text-[12px] leading-relaxed text-faint">
-        Demo build — there is no server behind this form. Any valid email and an
-        eight-character password sign you in, and the session is kept in this
-        browser only.
       </p>
     </form>
   );

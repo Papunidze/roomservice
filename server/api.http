@@ -50,3 +50,23 @@ Content-Type: application/json
   "email": "test@gmail.com",
   "password": "test12345680"
 }
+
+### forgot password -> 204 (link printed in the server log when RESEND_API_KEY is unset)
+POST {{host}}/api/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### reset password -> 200, sets cookie
+POST {{host}}/api/auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "paste-from-the-link",
+  "password": "{{password}}"
+}
+
+### google sign-in (open in a browser)
+GET {{host}}/api/auth/google

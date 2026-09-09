@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { checkSignIn, checkSignUp, displayName } from "./credentials";
+import {
+  checkEmail,
+  checkPassword,
+  checkSignIn,
+  checkSignUp,
+} from "./credentials";
 
 const valid = {
   name: "Nino Tsereteli",
@@ -40,18 +45,22 @@ describe("checkSignUp", () => {
   });
 });
 
-describe("displayName", () => {
-  it("splits the local part on separators", () => {
-    expect(displayName("nino.tsereteli@batumipalace.ge")).toBe(
-      "Nino Tsereteli",
-    );
+describe("checkEmail", () => {
+  it("returns nothing for a valid email", () => {
+    expect(checkEmail(valid.email)).toBeUndefined();
   });
 
-  it("keeps a single-word local part", () => {
-    expect(displayName("nino@batumipalace.ge")).toBe("Nino");
+  it("returns a message for a malformed email", () => {
+    expect(checkEmail("nino@")).toEqual(expect.any(String));
+  });
+});
+
+describe("checkPassword", () => {
+  it("returns nothing for a long enough password", () => {
+    expect(checkPassword(valid.password)).toBeUndefined();
   });
 
-  it("falls back to the email when the local part is only separators", () => {
-    expect(displayName("-@example.com")).toBe("-@example.com");
+  it("returns a message for a short password", () => {
+    expect(checkPassword("sea")).toEqual(expect.any(String));
   });
 });

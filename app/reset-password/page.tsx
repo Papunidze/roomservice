@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { AuthShell, SignInForm } from "@/features/auth";
+import { AuthShell, ResetPasswordForm } from "@/features/auth";
 
 export const metadata: Metadata = {
-  title: "Sign in · RoomCall",
+  title: "Choose a new password · RoomCall",
 };
 
 export default function Page() {
   return (
     <AuthShell>
       <Suspense>
-        <SignInForm />
+        <ResetPasswordForm />
       </Suspense>
     </AuthShell>
   );

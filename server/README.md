@@ -22,6 +22,10 @@ pnpm dev                      # http://localhost:4000
 | POST   | `/api/auth/login`    | email, password              | 200, sets cookie, `{user}` |
 | POST   | `/api/auth/logout`   | —                            | 204, clears cookie         |
 | GET    | `/api/auth/me`       | —                            | 200 `{user}` or 401        |
+| GET    | `/api/auth/google`   | —                            | 302 to Google consent      |
+| GET    | `/api/auth/google/callback` | code, state (query)   | 302 to `{CLIENT_ORIGIN}/desk`, sets cookie |
+| POST   | `/api/auth/forgot-password` | email                 | 204 always                 |
+| POST   | `/api/auth/reset-password`  | token, password       | 200, sets cookie, `{user}` |
 
 The session is a JWT (HS256, 7 days, `sub` = user id) delivered as
 `roomcall_session`: `HttpOnly; Secure; SameSite; Path=/`. HttpOnly means the
@@ -51,7 +55,24 @@ so the two take similar time.
 stays valid until it expires. Short-lived access tokens plus a rotating refresh
 token in Mongo are the fix when you need real revocation.
 
+**Google sign-in** is plain OAuth 2.0 with `fetch` — no SDK. `/google` stores a
+random `state` in a 10-minute HttpOnly cookie and redirects to Google;
+`/google/callback` checks the state, swaps the code for an access token, reads
+the OpenID userinfo endpoint and only accepts verified emails. A matching
+`googleId` or email signs into the existing user (linking the Google id);
+otherwise a user is created with an empty hotel name and no password. Needs
+`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`; without them the route answers
+503.
+
+**Password reset** never reveals whether an email exists: `/forgot-password`
+is always 204. When the user exists, a 32-byte random token is generated, its
+SHA-256 stored on the user with a one-hour expiry, and the plain token mailed
+as `{CLIENT_ORIGIN}/reset-password?token=…`. `/reset-password` matches the hash,
+replaces the password hash, clears the token and signs the user in. Mail goes
+through Resend's HTTP API when `RESEND_API_KEY` is set and is printed to the
+server log otherwise.
+
 ## Not here yet
 
-Rate limiting on login, email verification, password reset, refresh-token
+Rate limiting on login and forgot-password, email verification, refresh-token
 rotation, and eslint for this package.

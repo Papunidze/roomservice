@@ -1,56 +1,61 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { Button } from "@/shared/ui";
+import { Button, showToast } from "@/shared/ui";
 
-import { forgotPassword } from "../api";
-import { checkEmail } from "../credentials";
-import { AuthField } from "./AuthField";
+import { resetPassword } from "../api";
+import { checkPassword, MIN_PASSWORD } from "../credentials";
+import { signIn } from "../store";
+import { PasswordField } from "./AuthField";
 import { AuthLink } from "./AuthLink";
 import { FormError } from "./FormError";
 
-export function ForgotPasswordForm() {
-  const [email, setEmail] = useState("");
+export function ResetPasswordForm() {
+  const router = useRouter();
+  const token = useSearchParams().get("token") ?? "";
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string>();
   const [formError, setFormError] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSent, setIsSent] = useState(false);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
 
-    const found = checkEmail(email);
+    const found = checkPassword(password);
     setError(found);
     setFormError(undefined);
     if (found) return;
 
     setIsSubmitting(true);
-    const result = await forgotPassword(email);
+    const result = await resetPassword(token, password);
     setIsSubmitting(false);
 
     if (!result.ok) {
-      setError(result.fields.email);
-      setFormError(result.fields.email ? undefined : result.message);
+      setError(result.fields.password);
+      setFormError(result.fields.password ? undefined : result.message);
       return;
     }
 
-    setIsSent(true);
+    signIn(result.data);
+    showToast("Password updated");
+    router.push("/desk");
   }
 
-  if (isSent) {
+  if (!token) {
     return (
       <div>
         <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.03em]">
-          Check your inbox
+          Link incomplete
         </h1>
         <p className="mt-2 text-[14.5px] leading-relaxed text-soft">
-          If <span className="font-medium text-ink">{email}</span> belongs to a
-          RoomCall desk, a reset link is on its way. It works for one hour.
+          This page needs the link from your email. Open it again, or request a
+          new one.
         </p>
         <p className="mt-7 text-[14px] text-soft">
-          <AuthLink href="/sign-in">Back to sign in</AuthLink>
+          <AuthLink href="/forgot-password">Request a new link</AuthLink>
         </p>
       </div>
     );
@@ -59,35 +64,31 @@ export function ForgotPasswordForm() {
   return (
     <form onSubmit={submit} noValidate>
       <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.03em]">
-        Reset password
+        Choose a new password
       </h1>
       <p className="mt-2 text-[14.5px] leading-relaxed text-soft">
-        Enter your work email and we will send a link that works for one hour.
+        You will be signed in straight after.
       </p>
 
       <div className="mt-8 flex flex-col gap-4">
         <FormError message={formError} />
-        <AuthField
-          label="Work email"
-          type="email"
-          autoComplete="username"
-          value={email}
+        <PasswordField
+          label="New password"
+          autoComplete="new-password"
+          hint={`${MIN_PASSWORD} characters or more`}
+          value={password}
           error={error}
-          onChange={setEmail}
+          onChange={setPassword}
         />
         <Button
           type="submit"
           disabled={isSubmitting}
           className="mt-2 min-h-13 w-full text-[15px]"
         >
-          {isSubmitting ? "Sending…" : "Send reset link"}
+          {isSubmitting ? "Saving…" : "Save password"}
           <ArrowRight strokeWidth={1.6} className="size-4" />
         </Button>
       </div>
-
-      <p className="mt-7 text-center text-[14px] text-soft">
-        Remembered it? <AuthLink href="/sign-in">Sign in</AuthLink>
-      </p>
     </form>
   );
 }
