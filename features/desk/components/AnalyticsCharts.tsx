@@ -3,9 +3,7 @@
 import {
   CATEGORY_ICON,
   CATEGORY_LABEL,
-  DEMO_ANALYTICS,
-  LANGUAGE_MIX,
-  LANGUAGE_MIX_OTHER,
+  type Analytics,
 } from "@/features/requests";
 import { DICTIONARY } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
@@ -23,14 +21,9 @@ const MIX_FILL = [
 
 const MIX_OTHER_FILL = "bg-ink/8";
 
-export function CategoryBars({ scale }: { scale: number }) {
-  const { categoryTotals } = DEMO_ANALYTICS;
-  const peak = categoryTotals[0]?.count ?? 1;
-  const rows = categoryTotals.map((entry) => ({
-    ...entry,
-    scaled: Math.max(1, Math.round((entry.count * scale) / 27)),
-  }));
-  const total = rows.reduce((sum, row) => sum + row.scaled, 0);
+export function CategoryBars({ rows }: { rows: Analytics["categoryTotals"] }) {
+  const peak = rows[0]?.count ?? 1;
+  const total = rows.reduce((sum, row) => sum + row.count, 0);
 
   return (
     <>
@@ -59,7 +52,7 @@ export function CategoryBars({ scale }: { scale: number }) {
                 />
               </div>
               <span className="text-right font-mono text-xs text-muted">
-                {row.scaled}
+                {row.count}
               </span>
             </div>
           );
@@ -69,9 +62,8 @@ export function CategoryBars({ scale }: { scale: number }) {
   );
 }
 
-export function HourChart({ scale }: { scale: number }) {
-  const hours = DEMO_ANALYTICS.ticketsByHour;
-  const peak = Math.max(...hours);
+export function HourChart({ hours }: { hours: number[] }) {
+  const peak = Math.max(1, ...hours);
   const peakHour = hours.indexOf(peak);
 
   return (
@@ -89,7 +81,7 @@ export function HourChart({ scale }: { scale: number }) {
         {hours.map((value, hour) => (
           <div
             key={hour}
-            title={`${String(hour).padStart(2, "0")}:00 · ${Math.round((value * scale) / 27)} tickets`}
+            title={`${String(hour).padStart(2, "0")}:00 · ${value} tickets`}
             style={{ height: `${Math.round((value / peak) * 100)}%` }}
             className={cn(
               "flex-1 rounded-t-[4px] rounded-b-[2px]",
@@ -126,15 +118,29 @@ function path(values: number[], max: number) {
     .join(" ");
 }
 
-export function TrendChart() {
-  const { firstResponseTrend, resolutionTrend, trendDays } = DEMO_ANALYTICS;
-  const max = 32;
+interface TrendChartProps {
+  points: Analytics["trend"];
+  label: string;
+}
+
+export function TrendChart({ points, label }: TrendChartProps) {
+  const firstResponseTrend = points.map((p) => p.firstResponseMinutes ?? 0);
+  const resolutionTrend = points.map((p) => p.resolutionMinutes ?? 0);
+  const max = Math.max(30, ...firstResponseTrend, ...resolutionTrend);
+  const ticks = [max, (max * 2) / 3, max / 3, 0].map(
+    (v) => `${Math.round(v)}m`,
+  );
+  const trendDays = points
+    .filter(
+      (_, index) => index % Math.max(1, Math.ceil(points.length / 5)) === 0,
+    )
+    .map((p) => p.day.slice(5));
 
   return (
     <>
       <div className="flex items-baseline justify-between">
         <span className="text-base font-semibold tracking-[-0.02em]">
-          Response time · last 30 days
+          Response time · {label}
         </span>
         <span className="flex gap-3.5 text-xs text-faint">
           <span className="flex items-center gap-1.5">
@@ -150,10 +156,10 @@ export function TrendChart() {
 
       <div className="relative mt-5 h-42.5">
         <div className="absolute inset-0 flex flex-col justify-between">
-          {["30m", "20m", "10m", "0"].map((label) => (
-            <div key={label} className="flex items-center gap-2.5">
+          {ticks.map((tick, index) => (
+            <div key={index} className="flex items-center gap-2.5">
               <span className="w-8.5 text-right font-mono text-[10px] text-ghost">
-                {label}
+                {tick}
               </span>
               <span className="h-px flex-1 bg-ink/6" />
             </div>
@@ -195,27 +201,33 @@ export function TrendChart() {
   );
 }
 
-export function LanguageMix() {
+export function LanguageMix({
+  entries,
+}: {
+  entries: Analytics["languageMix"];
+}) {
+  const top = entries.slice(0, MIX_FILL.length);
+  const other = Math.max(
+    0,
+    100 - top.reduce((sum, entry) => sum + entry.percent, 0),
+  );
   return (
     <>
       <div className="text-base font-semibold tracking-[-0.02em]">
         Language mix
       </div>
       <div className="mt-5 flex h-3.5 gap-0.5 overflow-hidden rounded-full">
-        {LANGUAGE_MIX.map((entry, index) => (
+        {top.map((entry, index) => (
           <div
             key={entry.lang}
             style={{ width: `${entry.percent}%` }}
             className={MIX_FILL[index]}
           />
         ))}
-        <div
-          style={{ width: `${LANGUAGE_MIX_OTHER}%` }}
-          className={MIX_OTHER_FILL}
-        />
+        <div style={{ width: `${other}%` }} className={MIX_OTHER_FILL} />
       </div>
       <div className="mt-4.5 flex flex-col gap-2.5">
-        {LANGUAGE_MIX.map((entry, index) => (
+        {top.map((entry, index) => (
           <div
             key={entry.lang}
             className="flex items-center gap-2.5 text-[13px]"
@@ -234,13 +246,8 @@ export function LanguageMix() {
             className={cn("size-2.5 shrink-0 rounded-[3px]", MIX_OTHER_FILL)}
           />
           <span className="flex-1 text-muted">Other languages</span>
-          <span className="font-mono text-xs text-muted">
-            {LANGUAGE_MIX_OTHER}%
-          </span>
+          <span className="font-mono text-xs text-muted">{other}%</span>
         </div>
-      </div>
-      <div className="mt-4.5 rounded-[14px] bg-sand/28 px-3.5 py-3 text-[12.5px] leading-relaxed text-soft">
-        {DEMO_ANALYTICS.insight}
       </div>
     </>
   );

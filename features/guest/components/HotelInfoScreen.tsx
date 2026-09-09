@@ -3,7 +3,7 @@
 import { Wifi } from "lucide-react";
 import { useState } from "react";
 
-import { useSettings } from "@/features/requests";
+import type { GuestSettings } from "@/features/requests";
 import { DICTIONARY, scriptFont, type Phrases } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 
@@ -11,11 +11,16 @@ import { ScreenHeader } from "./ScreenHeader";
 
 interface HotelInfoScreenProps {
   phrases: Phrases;
+  settings: GuestSettings;
   onBack: () => void;
 }
 
-export function HotelInfoScreen({ phrases, onBack }: HotelInfoScreenProps) {
-  const { hotel, info, infoSourceLang } = useSettings();
+export function HotelInfoScreen({
+  phrases,
+  settings,
+  onBack,
+}: HotelInfoScreenProps) {
+  const { hotel, info, infoSourceLang } = settings;
   const [copied, setCopied] = useState(false);
 
   const rows = [

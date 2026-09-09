@@ -6,6 +6,7 @@ export { Field, FIELD_CONTROL, NumberField, TextField } from "./Field";
 export { Flag } from "./Flag";
 export { Modal } from "./Modal";
 export { Overlays } from "./Overlays";
+export { QrCode } from "./QrCode";
 export { RotatingGreeting, useRotatingLanguage } from "./RotatingGreeting";
 export { Switch } from "./Switch";
 export { showToast } from "./toast";

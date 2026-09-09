@@ -4,24 +4,76 @@ import { Send } from "lucide-react";
 import { useState } from "react";
 
 import { STAFF_ROLES, type StaffRole } from "@/features/requests";
-import type { LangCode } from "@/shared/i18n";
-import { Button, Chip, Modal, SegmentedOption, showToast } from "@/shared/ui";
+import { cn } from "@/shared/lib/cn";
+import {
+  Button,
+  Chip,
+  Field,
+  FIELD_CONTROL,
+  Modal,
+  showToast,
+} from "@/shared/ui";
+
+import { inviteMember } from "../store";
 
 export function InviteModal({ onClose }: { onClose: () => void }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [role, setRole] = useState<StaffRole>("Housekeeping");
-  const [lang, setLang] = useState<LangCode>("ka");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSending, setIsSending] = useState(false);
 
-  const slug = role.toLowerCase().replace(" ", "-");
-  const link = `roomcall.ge/join/batumi-palace/${slug}-${lang}-7f3k2`;
+  async function send() {
+    setIsSending(true);
+    const result = await inviteMember({ name, email, role });
+    setIsSending(false);
+
+    if (!result.ok) {
+      setErrors(
+        result.code === "email_taken"
+          ? { email: result.message }
+          : result.fields,
+      );
+      if (result.code !== "email_taken" && !Object.keys(result.fields).length)
+        showToast(result.message);
+      return;
+    }
+
+    showToast(`Sign-in details emailed to ${result.data.member.email}`);
+    onClose();
+  }
 
   return (
     <Modal
       title="Invite a team member"
-      description="They open the link, pick a name, and are in — no password."
+      description="They get an email with their sign-in and a generated password."
       onClose={onClose}
       className="w-115"
     >
-      <div className="mt-4.5 mb-2 text-xs text-faint">Role</div>
+      <div className="mt-4.5 flex gap-2.5">
+        <Field label="Name" className="flex-1">
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className={cn(FIELD_CONTROL, errors.name && "border-urgent")}
+          />
+        </Field>
+        <Field label="Work email" className="flex-1">
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className={cn(FIELD_CONTROL, errors.email && "border-urgent")}
+          />
+        </Field>
+      </div>
+      {errors.name || errors.email ? (
+        <p className="mt-1.5 text-xs text-urgent">
+          {errors.name ?? errors.email}
+        </p>
+      ) : null}
+
+      <div className="mt-4 mb-2 text-xs text-faint">Role</div>
       <div className="flex flex-wrap gap-1.5">
         {STAFF_ROLES.map((option) => (
           <Chip
@@ -34,48 +86,13 @@ export function InviteModal({ onClose }: { onClose: () => void }) {
         ))}
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <span className="text-xs text-faint">Interface language</span>
-        <span className="flex gap-0.5 rounded-full bg-ink/5 p-0.5">
-          {(["ka", "en"] as const).map((code) => (
-            <SegmentedOption
-              key={code}
-              active={lang === code}
-              onClick={() => setLang(code)}
-            >
-              {code.toUpperCase()}
-            </SegmentedOption>
-          ))}
-        </span>
-      </div>
-
-      <div className="mt-4.5 flex min-h-11.5 items-center gap-2 rounded-full border border-line-strong bg-paper pr-1.5 pl-3.5">
-        <span className="flex-1 truncate font-mono text-xs text-muted">
-          {link}
-        </span>
-        <Button
-          variant="dark"
-          className="min-h-8.5 px-3.5 text-xs"
-          onClick={() =>
-            showToast(`Invite link copied · ${role} · expires in 7 days`)
-          }
-        >
-          Copy link
-        </Button>
-      </div>
-
-      <div className="mt-4.5 flex items-center justify-between gap-2">
-        <Button
-          variant="ghost"
-          onClick={() =>
-            showToast(`Opening Telegram with the invite for ${role}`)
-          }
-        >
-          <Send strokeWidth={1.6} className="size-3.5" />
-          Send via Telegram
-        </Button>
+      <div className="mt-5.5 flex justify-end gap-2">
         <Button variant="ghost" onClick={onClose}>
-          Done
+          Cancel
+        </Button>
+        <Button disabled={isSending} onClick={send}>
+          <Send strokeWidth={1.6} className="size-3.5" />
+          {isSending ? "Sending…" : "Send invite"}
         </Button>
       </div>
     </Modal>

@@ -6,10 +6,11 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "@/shared/ui";
 
-import { login } from "../api";
+import { login, verifySecondFactor } from "../api";
 import { checkSignIn, hasErrors, type SignInErrors } from "../credentials";
 import { signIn } from "../store";
 import { AuthField, PasswordField } from "./AuthField";
+import { CodeField } from "./CodeField";
 import { AuthLink } from "./AuthLink";
 import { FormError } from "./FormError";
 import { GoogleButton } from "./GoogleButton";
@@ -22,11 +23,32 @@ export function SignInForm() {
   const hadGoogleError = useSearchParams().get("error") === "google";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<SignInErrors>({});
+  const [errors, setErrors] = useState<SignInErrors & { code?: string }>({});
   const [formError, setFormError] = useState(
     hadGoogleError ? GOOGLE_FAILED : undefined,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ticket, setTicket] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+
+  async function submitCode(event: FormEvent) {
+    event.preventDefault();
+    if (!ticket) return;
+
+    setIsSubmitting(true);
+    const result = await verifySecondFactor(ticket, code);
+    setIsSubmitting(false);
+
+    if (!result.ok) {
+      if (result.code === "invalid_ticket") setTicket(null);
+      setErrors(result.fields);
+      setFormError(result.fields.code ? undefined : result.message);
+      return;
+    }
+
+    signIn(result.data);
+    router.push("/desk");
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -46,8 +68,49 @@ export function SignInForm() {
       return;
     }
 
-    signIn(result.data);
+    if (result.data.kind === "second-factor") {
+      setTicket(result.data.ticket);
+      return;
+    }
+
+    signIn(result.data.user);
     router.push("/desk");
+  }
+
+  if (ticket) {
+    return (
+      <form onSubmit={submitCode} noValidate>
+        <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.03em]">
+          One more step
+        </h1>
+        <p className="mt-2 text-[14.5px] leading-relaxed text-soft">
+          Enter the 6-digit code from your authenticator app.
+        </p>
+
+        <div className="mt-8 flex flex-col gap-4">
+          <FormError message={formError} />
+          <CodeField value={code} error={errors.code} onChange={setCode} />
+          <Button
+            type="submit"
+            disabled={isSubmitting || code.length < 6}
+            className="mt-2 min-h-13 w-full text-[15px]"
+          >
+            {isSubmitting ? "Checking…" : "Continue"}
+            <ArrowRight strokeWidth={1.6} className="size-4" />
+          </Button>
+        </div>
+
+        <p className="mt-7 text-center text-[14px] text-soft">
+          <button
+            type="button"
+            onClick={() => setTicket(null)}
+            className="cursor-pointer font-medium text-ink underline underline-offset-3"
+          >
+            Start over
+          </button>
+        </p>
+      </form>
+    );
   }
 
   return (

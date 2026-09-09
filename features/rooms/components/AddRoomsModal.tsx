@@ -5,7 +5,7 @@ import { useState } from "react";
 import { cn } from "@/shared/lib/cn";
 import { Button, Field, FIELD_CONTROL, Modal } from "@/shared/ui";
 
-import { nextRoomsFor } from "../seed";
+import { nextRoomNumbers } from "../numbers";
 import type { Room } from "../types";
 
 const MODES = [
@@ -16,7 +16,7 @@ const MODES = [
 interface AddRoomsModalProps {
   rooms: Room[];
   onClose: () => void;
-  onCreate: (added: Room[]) => void;
+  onCreate: (added: string[]) => void;
 }
 
 export function AddRoomsModal({
@@ -31,7 +31,7 @@ export function AddRoomsModal({
   const from = Number(fromValue);
   const to = mode === "range" ? Number(toValue) : from;
   const valid = from > 0 && to >= from && to - from < 200;
-  const added = valid ? nextRoomsFor(from, to, rooms) : [];
+  const added = valid ? nextRoomNumbers(from, to, rooms) : [];
   const skipped = valid ? to - from + 1 - added.length : 0;
 
   const preview = !valid

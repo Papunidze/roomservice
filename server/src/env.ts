@@ -14,6 +14,9 @@ const schema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  TRANSLATOR: z.enum(["auto", "off"]).default("auto"),
+  MYMEMORY_EMAIL: z.string().email().optional(),
   MAIL_FROM: z.string().min(1).default("RoomCall <onboarding@resend.dev>"),
 });
 
@@ -28,3 +31,8 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 export const isProduction = env.NODE_ENV === "production";
+
+export const clientOrigins = env.CLIENT_ORIGIN.split(",").map((origin) =>
+  origin.trim(),
+);
+export const clientOrigin = clientOrigins[0] ?? env.CLIENT_ORIGIN;

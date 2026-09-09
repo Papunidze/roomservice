@@ -3,7 +3,7 @@
 import { Hotel, Search, X } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-import { useSettings } from "@/features/requests";
+import type { GuestSettings } from "@/features/requests";
 import {
   DICTIONARY,
   LANGUAGES,
@@ -31,11 +31,15 @@ function useDeviceLanguages() {
 
 interface LanguageScreenProps {
   room: string;
+  settings: GuestSettings;
   onPick: (code: LangCode) => void;
 }
 
-export function LanguageScreen({ room, onPick }: LanguageScreenProps) {
-  const settings = useSettings();
+export function LanguageScreen({
+  room,
+  settings,
+  onPick,
+}: LanguageScreenProps) {
   const deviceTags = useDeviceLanguages();
   const [greetIndex, setGreetIndex] = useState(0);
   const [query, setQuery] = useState("");

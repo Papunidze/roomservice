@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 
 import { GuestApp } from "@/features/guest";
-import { HOTEL } from "@/features/requests";
 
 export const metadata: Metadata = {
-  title: `${HOTEL.name} · RoomCall`,
+  title: "RoomCall",
 };
 
-export default async function Page({ params }: PageProps<"/r/[room]">) {
-  const { room } = await params;
-  return <GuestApp room={room} />;
+export default async function Page({ searchParams }: PageProps<"/r/[room]">) {
+  const { t } = await searchParams;
+  return <GuestApp token={typeof t === "string" ? t : ""} />;
 }

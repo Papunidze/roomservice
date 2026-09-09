@@ -1,4 +1,11 @@
+import type { Settings } from "@/features/requests";
+
 export const PANEL_CARD = "rounded-tile border border-line bg-surface";
+
+export interface SettingsPanelProps {
+  settings: Settings;
+  onChange: (patch: Partial<Settings>) => void;
+}
 
 interface PanelHeadingProps {
   title: string;

@@ -17,8 +17,16 @@ export const badRequest = (message: string, fields?: FieldErrors) =>
 export const unauthenticated = () =>
   new HttpError(401, "unauthenticated", "Sign in to continue");
 
+export const forbidden = () =>
+  new HttpError(403, "forbidden", "Only a manager can do this");
+
 export const invalidCredentials = () =>
   new HttpError(401, "invalid_credentials", "Invalid email or password");
+
+export const wrongPassword = () =>
+  new HttpError(400, "wrong_password", "Current password is not right", {
+    currentPassword: "That is not your current password",
+  });
 
 export const emailTaken = () =>
   new HttpError(409, "email_taken", "That email is already registered");
@@ -36,3 +44,14 @@ export const googleNotConfigured = () =>
     "google_not_configured",
     "Google sign-in is not configured on this server",
   );
+
+export const wrongCode = () =>
+  new HttpError(400, "wrong_code", "That code is not right", {
+    code: "Check the 6 digits in your authenticator app",
+  });
+
+export const twoFactorAlreadyOn = () =>
+  new HttpError(409, "two_factor_on", "Two-factor authentication is already on");
+
+export const invalidTicket = () =>
+  new HttpError(401, "invalid_ticket", "Sign in again to continue");

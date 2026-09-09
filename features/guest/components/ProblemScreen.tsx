@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import {
   PROBLEM_KEYS,
-  useSettings,
+  type GuestSettings,
   type ProblemKey,
 } from "@/features/requests";
 import type { Phrases } from "@/shared/i18n";
@@ -16,6 +16,7 @@ import { ScreenHeader } from "./ScreenHeader";
 
 interface ProblemScreenProps {
   phrases: Phrases;
+  settings: GuestSettings;
   onBack: () => void;
   onSubmit: (input: {
     keys: ProblemKey[];
@@ -26,10 +27,10 @@ interface ProblemScreenProps {
 
 export function ProblemScreen({
   phrases,
+  settings,
   onBack,
   onSubmit,
 }: ProblemScreenProps) {
-  const settings = useSettings();
   const [keys, setKeys] = useState<ProblemKey[]>([]);
   const offered = PROBLEM_KEYS.filter(
     (key) => settings.categories[key].enabled,

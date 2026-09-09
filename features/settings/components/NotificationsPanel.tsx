@@ -2,19 +2,23 @@
 
 import { Send } from "lucide-react";
 
-import { updateSettings, type Settings } from "@/features/requests";
+import type { Settings } from "@/features/requests";
 import { cn } from "@/shared/lib/cn";
 import { Button, NumberField, showToast, Switch } from "@/shared/ui";
 
-import { PANEL_CARD, PanelHeading } from "./PanelHeading";
+import {
+  PANEL_CARD,
+  PanelHeading,
+  type SettingsPanelProps,
+} from "./PanelHeading";
 
 const TIME =
   "min-h-9.5 w-18 rounded-[10px] border border-line-strong bg-surface px-2.5 text-center font-mono text-sm outline-none";
 
-export function NotificationsPanel({ settings }: { settings: Settings }) {
+export function NotificationsPanel({ settings, onChange }: SettingsPanelProps) {
   const notifications = settings.notifications;
   const setNotifications = (patch: Partial<Settings["notifications"]>) =>
-    updateSettings({ notifications: { ...notifications, ...patch } });
+    onChange({ notifications: { ...notifications, ...patch } });
 
   return (
     <div className="animate-rise max-w-180">

@@ -1,25 +1,24 @@
 "use client";
 
-import { Bell, BellOff, CreditCard, Hotel, LogIn, LogOut } from "lucide-react";
+import { CreditCard, Hotel, KeyRound, LogIn, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { signOut, useSession } from "@/features/auth";
-import {
-  FRONT_DESK_AGENT,
-  updateSettings,
-  useRequests,
-  useSettings,
-} from "@/features/requests";
+import { ChangePasswordModal, signOut, useSession } from "@/features/auth";
+import { useRequests, useSettings } from "@/features/requests";
 import { cn } from "@/shared/lib/cn";
-import { Avatar, SegmentedOption, showToast } from "@/shared/ui";
+import { Avatar } from "@/shared/ui";
+
+import { useTitleAlert } from "../use-title-alert";
+import { NotificationsMenu } from "./NotificationsMenu";
 
 const NAV = [
   { href: "/desk", label: "Inbox" },
   { href: "/desk/rooms", label: "Rooms" },
   { href: "/desk/team", label: "Team" },
   { href: "/desk/analytics", label: "Analytics" },
+  { href: "/desk/preview", label: "Preview" },
   { href: "/desk/settings", label: "Settings" },
 ];
 
@@ -32,15 +31,18 @@ export function DeskHeader() {
   const session = useSession();
   const pathname = usePathname();
   const router = useRouter();
-  const [isAlertsOn, setIsAlertsOn] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
 
   const newCount = requests.filter(
     (request) => !request.archived && request.status === "new",
   ).length;
+  useTitleAlert(newCount);
+  const isManager = session?.role === "Manager";
+  const nav = isManager ? NAV : NAV.filter((item) => item.href === "/desk");
 
-  const agent = session?.name ?? FRONT_DESK_AGENT;
-  const email = session?.email ?? "nino@batumipalace.ge";
+  const agent = session?.name ?? "";
+  const email = session?.email ?? "";
 
   return (
     <div className="relative flex items-center gap-5 border-b border-line bg-surface px-6.5 py-3.5">
@@ -49,11 +51,13 @@ export function DeskHeader() {
         <span className="text-[15px] font-semibold tracking-[-0.02em]">
           {settings.hotel.name}
         </span>
-        <span className="text-[13px] text-faint">{agent} · Front desk</span>
+        <span className="text-[13px] text-faint">
+          {agent} · {session?.role ?? "Front desk"}
+        </span>
       </div>
 
       <nav className="mx-auto flex gap-0.5 rounded-full bg-ink/5 p-[3px]">
-        {NAV.map((item) => (
+        {nav.map((item) => (
           <Link
             key={item.href}
             href={item.href}
@@ -68,36 +72,7 @@ export function DeskHeader() {
       </nav>
 
       <div className="flex w-80 items-center justify-end gap-2.5">
-        {newCount > 0 ? (
-          <span className="inline-flex min-h-8.5 items-center gap-1.5 rounded-full bg-urgent/10 px-3.5 text-[12.5px] font-medium text-urgent">
-            <span className="animate-pulse-dot size-1.5 rounded-full bg-urgent" />
-            {newCount} new
-          </span>
-        ) : null}
-
-        <button
-          type="button"
-          title="New-request alerts"
-          aria-label={isAlertsOn ? "Mute alerts" : "Unmute alerts"}
-          onClick={() => {
-            setIsAlertsOn(!isAlertsOn);
-            showToast(
-              isAlertsOn
-                ? "Alerts muted for this device"
-                : "Alerts on · chime for new requests",
-            );
-          }}
-          className={cn(
-            "grid size-9.5 cursor-pointer place-items-center rounded-full border border-line-strong",
-            isAlertsOn ? "text-ink" : "text-ghost",
-          )}
-        >
-          {isAlertsOn ? (
-            <Bell strokeWidth={1.5} className="size-[15px]" />
-          ) : (
-            <BellOff strokeWidth={1.5} className="size-[15px]" />
-          )}
-        </button>
+        <NotificationsMenu />
 
         <button
           type="button"
@@ -124,38 +99,41 @@ export function DeskHeader() {
             <div className="border-b border-line-soft px-3 pt-2.5 pb-3">
               <div className="text-sm font-semibold">{agent}</div>
               <div className="mt-0.5 text-[12.5px] text-faint">
-                Front desk · {email}
+                {session?.role ?? "Front desk"} · {email}
               </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-2.5 px-3 pt-3 pb-2.5">
-              <span className="text-[13px]">Interface language</span>
-              <span className="flex gap-0.5 rounded-full bg-ink/5 p-0.5">
-                {(["ka", "en"] as const).map((code) => (
-                  <SegmentedOption
-                    key={code}
-                    active={settings.staffLang === code}
-                    onClick={() => updateSettings({ staffLang: code })}
-                  >
-                    {code.toUpperCase()}
-                  </SegmentedOption>
-                ))}
-              </span>
             </div>
 
             <div className="my-1 h-px bg-line-soft" />
 
-            <Link
-              href="/desk/settings"
-              onClick={() => setIsMenuOpen(false)}
-              className={MENU_ITEM}
-            >
-              <CreditCard
-                strokeWidth={1.5}
-                className="size-[15px] text-muted"
-              />
-              Billing
-            </Link>
+            {isManager ? (
+              <Link
+                href="/desk/settings"
+                onClick={() => setIsMenuOpen(false)}
+                className={MENU_ITEM}
+              >
+                <CreditCard
+                  strokeWidth={1.5}
+                  className="size-[15px] text-muted"
+                />
+                Billing
+              </Link>
+            ) : null}
+            {isManager ? null : (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setIsPasswordOpen(true);
+                }}
+                className={MENU_ITEM}
+              >
+                <KeyRound
+                  strokeWidth={1.5}
+                  className="size-[15px] text-muted"
+                />
+                Change password
+              </button>
+            )}
             {session ? (
               <button
                 type="button"
@@ -181,6 +159,9 @@ export function DeskHeader() {
             )}
           </div>
         </>
+      ) : null}
+      {isPasswordOpen ? (
+        <ChangePasswordModal onClose={() => setIsPasswordOpen(false)} />
       ) : null}
     </div>
   );

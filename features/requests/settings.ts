@@ -1,14 +1,6 @@
-import { DICTIONARY, LANGUAGES, type LangCode } from "@/shared/i18n";
+import { DICTIONARY, type LangCode } from "@/shared/i18n";
 
-import {
-  CATEGORY_DEFAULT,
-  CONFIGURABLE_CATEGORIES,
-  FRONT_DESK_LANGUAGE,
-  HOTEL,
-  isItemKey,
-  ITEM_KEYS,
-  type ConfigurableCategory,
-} from "./catalog";
+import { isItemKey, type ConfigurableCategory } from "./catalog";
 import type { StaffRole, Urgency } from "./types";
 
 export interface HotelProfile {
@@ -70,52 +62,7 @@ export interface Settings {
   sessions: SessionSettings;
 }
 
-const categories = Object.fromEntries(
-  CONFIGURABLE_CATEGORIES.map((key) => [
-    key,
-    { enabled: true, ...CATEGORY_DEFAULT[key] },
-  ]),
-) as Record<ConfigurableCategory, CategorySetting>;
-
-const guestLanguages = Object.fromEntries(
-  LANGUAGES.map((code) => [code, true]),
-) as Record<LangCode, boolean>;
-
-export const SETTINGS_SEED: Settings = {
-  hotel: {
-    name: HOTEL.name,
-    address: HOTEL.address,
-    timezone: HOTEL.timezone,
-    checkout: HOTEL.checkout,
-  },
-  staffLang: FRONT_DESK_LANGUAGE,
-  staffDefaultLang: FRONT_DESK_LANGUAGE,
-  guestLanguages,
-  infoSourceLang: "en",
-  info: {
-    wifiName: HOTEL.wifiNetwork,
-    wifiPassword: HOTEL.wifiPassword,
-    breakfast: HOTEL.breakfast,
-    spa: HOTEL.spa,
-    reception: HOTEL.reception,
-    rules: HOTEL.rules,
-  },
-  categories,
-  items: ITEM_KEYS.map((key) => ({
-    key,
-    label: DICTIONARY.en[key],
-    available: true,
-  })),
-  notifications: {
-    telegram: true,
-    group: "Batumi Palace — Reception",
-    renotifyMinutes: 15,
-    quietHours: true,
-    quietFrom: "22:00",
-    quietTo: "07:00",
-  },
-  sessions: {
-    autoCloseHours: 24,
-    requireClose: true,
-  },
-};
+export type GuestSettings = Pick<
+  Settings,
+  "guestLanguages" | "info" | "infoSourceLang" | "categories" | "items"
+> & { hotel: Pick<HotelProfile, "name" | "checkout"> };

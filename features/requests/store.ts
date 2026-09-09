@@ -1,61 +1,29 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { createRemoteStore, useRemote } from "@/shared/lib/remote-store";
 
-import { createStore } from "@/shared/lib/store";
+import { fetchRequests } from "./api";
+import { watchHotel } from "./live";
+import type { Request } from "./types";
 
-import { DEMO_REQUESTS } from "./demo-data";
-import { storedRequestsSchema } from "./schemas";
-import type { Message, Request } from "./types";
+const EMPTY: Request[] = [];
 
-const store = createStore<Request[]>(
-  "roomcall.requests",
-  DEMO_REQUESTS,
-  storedRequestsSchema,
-);
+const store = createRemoteStore<Request[]>({
+  load: fetchRequests,
+  watch: (refresh) => watchHotel("request", refresh),
+  pollMs: 60_000,
+});
 
-export const useRequests = () =>
-  useSyncExternalStore(store.subscribe, store.get, store.getServer);
+export const useRequests = () => useRemote(store) ?? EMPTY;
 
-export function createRequest(draft: Omit<Request, "id">) {
-  const current = store.get();
-  const id = current.reduce((max, item) => Math.max(max, item.id), 200) + 1;
-  store.set([{ ...draft, id }, ...current]);
-  return id;
-}
-
-export function updateRequest(id: number, patch: Partial<Request>) {
+export function replaceRequest(next: Request) {
+  const current = store.get() ?? EMPTY;
+  const exists = current.some((item) => item.id === next.id);
   store.set(
-    store.get().map((item) => (item.id === id ? { ...item, ...patch } : item)),
+    exists
+      ? current.map((item) => (item.id === next.id ? next : item))
+      : [next, ...current],
   );
 }
 
-export function appendMessage(id: number, message: Message) {
-  store.set(
-    store
-      .get()
-      .map((item) =>
-        item.id === id ? { ...item, thread: [...item.thread, message] } : item,
-      ),
-  );
-}
-
-export function archiveRoom(room: string) {
-  const open = store
-    .get()
-    .filter(
-      (item) => item.room === room && !item.archived && item.status !== "done",
-    );
-
-  store.set(
-    store
-      .get()
-      .map((item) =>
-        item.room === room && !item.archived && item.status !== "done"
-          ? { ...item, archived: true }
-          : item,
-      ),
-  );
-
-  return open.length;
-}
+export const refreshRequests = () => store.refresh();

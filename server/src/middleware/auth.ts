@@ -2,7 +2,7 @@ import type { Request, RequestHandler } from "express";
 
 import { findUserById } from "../auth/service.js";
 import { SESSION_COOKIE } from "../lib/cookie.js";
-import { unauthenticated } from "../lib/http-error.js";
+import { forbidden, unauthenticated } from "../lib/http-error.js";
 import { readSessionToken } from "../lib/token.js";
 
 const BEARER = "Bearer ";
@@ -28,5 +28,10 @@ export const requireAuth: RequestHandler = async (req, _res, next) => {
   if (!user) throw unauthenticated();
 
   req.user = user;
+  next();
+};
+
+export const requireManager: RequestHandler = (req, _res, next) => {
+  if (req.user?.role !== "Manager") throw forbidden();
   next();
 };

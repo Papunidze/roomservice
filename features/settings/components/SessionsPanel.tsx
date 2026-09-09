@@ -1,15 +1,19 @@
 "use client";
 
-import { updateSettings, type Settings } from "@/features/requests";
+import type { Settings } from "@/features/requests";
 import { cn } from "@/shared/lib/cn";
 import { NumberField, Switch } from "@/shared/ui";
 
-import { PANEL_CARD, PanelHeading } from "./PanelHeading";
+import {
+  PANEL_CARD,
+  PanelHeading,
+  type SettingsPanelProps,
+} from "./PanelHeading";
 
-export function SessionsPanel({ settings }: { settings: Settings }) {
+export function SessionsPanel({ settings, onChange }: SettingsPanelProps) {
   const { sessions } = settings;
   const setSessions = (patch: Partial<Settings["sessions"]>) =>
-    updateSettings({ sessions: { ...sessions, ...patch } });
+    onChange({ sessions: { ...sessions, ...patch } });
 
   const summary = `Right now: a room with no scans or messages for ${sessions.autoCloseHours} hours closes itself. ${
     sessions.requireClose

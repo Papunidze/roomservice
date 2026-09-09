@@ -1,21 +1,35 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { createRemoteStore, useRemote } from "@/shared/lib/remote-store";
+import { showToast } from "@/shared/ui";
 
-import { createStore } from "@/shared/lib/store";
+import { fetchSettings, patchSettings } from "./api";
+import { watchHotel } from "./live";
+import type { Settings } from "./settings";
 
-import { settingsSchema } from "./schemas";
-import { SETTINGS_SEED, type Settings } from "./settings";
+const store = createRemoteStore<Settings>({
+  load: fetchSettings,
+  watch: (refresh) => watchHotel("settings", refresh),
+});
 
-const store = createStore<Settings>(
-  "roomcall.settings",
-  SETTINGS_SEED,
-  settingsSchema,
-);
+export const useOptionalSettings = () => useRemote(store);
 
-export const useSettings = () =>
-  useSyncExternalStore(store.subscribe, store.get, store.getServer);
+export function useSettings() {
+  const settings = useRemote(store);
+  if (!settings) throw new Error("Settings are read before they are loaded");
+  return settings;
+}
 
-export function updateSettings(patch: Partial<Settings>) {
-  store.set({ ...store.get(), ...patch });
+export async function updateSettings(patch: Partial<Settings>) {
+  const current = store.get();
+  if (!current) return false;
+
+  store.set({ ...current, ...patch });
+  const result = await patchSettings(patch);
+  if (!result.ok) {
+    store.set(current);
+    showToast(result.message);
+    return false;
+  }
+  return true;
 }

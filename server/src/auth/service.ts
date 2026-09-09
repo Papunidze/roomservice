@@ -2,30 +2,57 @@ import { createHash, randomBytes } from "node:crypto";
 
 import { MongoServerError, ObjectId } from "mongodb";
 
-import { users } from "../db.js";
+import { hotels, users } from "../db.js";
+import { createHotel } from "../hotels/service.js";
 import {
   emailTaken,
   invalidCredentials,
   invalidResetToken,
+  twoFactorAlreadyOn,
+  wrongCode,
+  wrongPassword,
 } from "../lib/http-error.js";
 import { hashPassword, verifyPassword } from "../lib/password.js";
+import { generateTotpSecret, verifyTotp } from "../lib/totp.js";
 import type { GoogleProfile } from "./google.js";
 import type { LoginInput, RegisterInput } from "./schemas.js";
 import type { PublicUser, UserDoc } from "./types.js";
 
 const DUPLICATE_KEY = 11000;
 const RESET_TTL_MS = 60 * 60 * 1000;
+const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-export function toPublicUser(user: UserDoc): PublicUser {
+export async function toPublicUser(user: UserDoc): Promise<PublicUser> {
+  const hotel = await hotels().findOne(
+    { _id: user.hotelId },
+    { projection: { "settings.hotel.name": 1 } },
+  );
   return {
     id: user._id.toHexString(),
+    hotelId: user.hotelId,
     name: user.name,
     email: user.email,
-    hotel: user.hotel,
+    hotel: hotel?.settings.hotel.name ?? "",
+    role: user.role,
+    twoFactorEnabled: Boolean(user.totp?.enabledAt),
   };
 }
 
-async function insertUser(user: UserDoc) {
+type NewUser = Pick<UserDoc, "hotelId" | "name" | "email" | "role"> &
+  Partial<
+    Pick<UserDoc, "passwordHash" | "googleId" | "lang" | "passwordReset">
+  >;
+
+export async function insertUser(input: NewUser) {
+  const user: UserDoc = {
+    _id: new ObjectId(),
+    lang: "en",
+    telegram: false,
+    onShift: false,
+    lastActiveAt: null,
+    createdAt: new Date(),
+    ...input,
+  };
   try {
     await users().insertOne(user);
   } catch (error) {
@@ -33,18 +60,20 @@ async function insertUser(user: UserDoc) {
       throw emailTaken();
     throw error;
   }
-  return toPublicUser(user);
+  return user;
 }
 
 export async function registerUser(input: RegisterInput) {
-  return insertUser({
-    _id: new ObjectId(),
+  if (await users().findOne({ email: input.email })) throw emailTaken();
+  const hotel = await createHotel(input.hotel);
+  const user = await insertUser({
+    hotelId: hotel._id,
     name: input.name,
     email: input.email,
-    hotel: input.hotel,
+    role: "Manager",
     passwordHash: await hashPassword(input.password),
-    createdAt: new Date(),
   });
+  return toPublicUser(user);
 }
 
 export async function authenticate(input: LoginInput) {
@@ -58,6 +87,41 @@ export async function authenticate(input: LoginInput) {
   const matches = await verifyPassword(input.password, user.passwordHash);
   if (!matches) throw invalidCredentials();
 
+  await touchUser(user._id);
+  return { user: await toPublicUser(user), needsSecondFactor: Boolean(user.totp?.enabledAt) };
+}
+
+export async function startTwoFactor(id: ObjectId) {
+  const user = await users().findOne({ _id: id });
+  if (user?.totp?.enabledAt) throw twoFactorAlreadyOn();
+  const secret = generateTotpSecret();
+  await users().updateOne(
+    { _id: id },
+    { $set: { totp: { secret, enabledAt: null } } },
+  );
+  return secret;
+}
+
+export async function confirmTwoFactor(id: ObjectId, code: string) {
+  const user = await users().findOne({ _id: id });
+  if (!user?.totp || !verifyTotp(user.totp.secret, code)) throw wrongCode();
+  await users().updateOne(
+    { _id: id },
+    { $set: { "totp.enabledAt": new Date() } },
+  );
+}
+
+export async function stopTwoFactor(id: ObjectId, code: string) {
+  const user = await users().findOne({ _id: id });
+  if (!user?.totp?.enabledAt || !verifyTotp(user.totp.secret, code))
+    throw wrongCode();
+  await users().updateOne({ _id: id }, { $unset: { totp: "" } });
+}
+
+export async function completeTwoFactor(id: ObjectId, code: string) {
+  const user = await users().findOne({ _id: id });
+  if (!user?.totp?.enabledAt || !verifyTotp(user.totp.secret, code))
+    throw wrongCode();
   return toPublicUser(user);
 }
 
@@ -65,38 +129,77 @@ export async function signInWithGoogle(profile: GoogleProfile) {
   const email = profile.email.toLowerCase();
   const existing = await users().findOneAndUpdate(
     { $or: [{ googleId: profile.sub }, { email }] },
-    { $set: { googleId: profile.sub } },
+    { $set: { googleId: profile.sub, lastActiveAt: new Date() } },
     { returnDocument: "after" },
   );
   if (existing) return toPublicUser(existing);
 
-  return insertUser({
-    _id: new ObjectId(),
-    name: profile.name || email.split("@")[0] || "Staff",
+  const name = profile.name || email.split("@")[0] || "Staff";
+  const hotel = await createHotel("");
+  const user = await insertUser({
+    hotelId: hotel._id,
+    name,
     email,
-    hotel: "",
+    role: "Manager",
     googleId: profile.sub,
-    createdAt: new Date(),
   });
+  return toPublicUser(user);
 }
 
 const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
 
-export async function createPasswordReset(email: string) {
-  const token = randomBytes(32).toString("base64url");
-  const user = await users().findOneAndUpdate(
-    { email },
+export const generatePassword = () => randomBytes(9).toString("base64url");
+
+export async function changePassword(
+  id: ObjectId,
+  currentPassword: string,
+  newPassword: string,
+) {
+  const user = await users().findOne({ _id: id });
+  if (!user) throw invalidCredentials();
+  if (user.passwordHash) {
+    const matches = await verifyPassword(currentPassword, user.passwordHash);
+    if (!matches) throw wrongPassword();
+  }
+  await users().updateOne(
+    { _id: id },
+    { $set: { passwordHash: await hashPassword(newPassword) } },
+  );
+}
+
+export async function assignPassword(id: ObjectId) {
+  const password = generatePassword();
+  await users().updateOne(
+    { _id: id },
     {
-      $set: {
-        passwordReset: {
-          tokenHash: hashToken(token),
-          expiresAt: new Date(Date.now() + RESET_TTL_MS),
-        },
-      },
+      $set: { passwordHash: await hashPassword(password) },
+      $unset: { passwordReset: "" },
     },
   );
-  return user ? { user: toPublicUser(user), token } : null;
+  return password;
+}
+
+export function issueResetToken(ttlMs = RESET_TTL_MS) {
+  const token = randomBytes(32).toString("base64url");
+  return {
+    token,
+    passwordReset: {
+      tokenHash: hashToken(token),
+      expiresAt: new Date(Date.now() + ttlMs),
+    },
+  };
+}
+
+export const INVITE_TTL = INVITE_TTL_MS;
+
+export async function createPasswordReset(email: string) {
+  const { token, passwordReset } = issueResetToken();
+  const user = await users().findOneAndUpdate(
+    { email },
+    { $set: { passwordReset } },
+  );
+  return user ? { user: await toPublicUser(user), token } : null;
 }
 
 export async function resetPassword(token: string, password: string) {
@@ -119,4 +222,8 @@ export async function findUserById(id: string) {
   if (!ObjectId.isValid(id)) return null;
   const user = await users().findOne({ _id: new ObjectId(id) });
   return user ? toPublicUser(user) : null;
+}
+
+export function touchUser(id: ObjectId) {
+  return users().updateOne({ _id: id }, { $set: { lastActiveAt: new Date() } });
 }

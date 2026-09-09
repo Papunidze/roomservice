@@ -28,7 +28,10 @@ export function clearSessionCookie(res: Response) {
 const stateOptions: CookieOptions = { ...options, sameSite: "lax" };
 
 export function setStateCookie(res: Response, state: string) {
-  res.cookie(STATE_COOKIE, state, { ...stateOptions, maxAge: STATE_MAX_AGE_MS });
+  res.cookie(STATE_COOKIE, state, {
+    ...stateOptions,
+    maxAge: STATE_MAX_AGE_MS,
+  });
 }
 
 export function readStateCookie(req: Request) {

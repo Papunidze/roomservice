@@ -3,15 +3,24 @@
 import { Check, Send } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
-import { Avatar, SegmentedOption, showToast, Switch } from "@/shared/ui";
+import { formatWhen } from "@/shared/lib/time";
+import { askConfirm, Avatar, showToast, Switch } from "@/shared/ui";
 
-import { patchMember } from "../store";
+import { patchMember, removeMember, resetMemberPassword } from "../store";
 import type { TeamMember } from "../types";
 
 const GRID =
-  "grid grid-cols-[1.4fr_130px_110px_170px_110px_150px] items-center gap-3";
+  "grid grid-cols-[1.4fr_140px_170px_110px_120px_220px] items-center gap-3";
 
-export function TeamTable({ members }: { members: TeamMember[] }) {
+interface TeamTableProps {
+  members: TeamMember[];
+  currentEmail: string;
+}
+
+const ACTION =
+  "min-h-7.5 cursor-pointer rounded-full border border-line px-2.5 text-[11.5px] text-faint transition-colors hover:border-ink/30 hover:text-ink";
+
+export function TeamTable({ members, currentEmail }: TeamTableProps) {
   return (
     <div className="overflow-hidden rounded-tile border border-line bg-surface">
       <div
@@ -22,10 +31,10 @@ export function TeamTable({ members }: { members: TeamMember[] }) {
       >
         <span>Member</span>
         <span>Role</span>
-        <span>Language</span>
         <span>Telegram</span>
         <span>On shift</span>
         <span>Last active</span>
+        <span />
       </div>
 
       {members.map((member) => (
@@ -45,18 +54,6 @@ export function TeamTable({ members }: { members: TeamMember[] }) {
 
           <span className="inline-flex w-fit rounded-full border border-line-strong px-2.5 py-1 text-xs font-medium">
             {member.role}
-          </span>
-
-          <span className="flex w-fit gap-0.5 rounded-full bg-ink/5 p-0.5">
-            {(["ka", "en"] as const).map((code) => (
-              <SegmentedOption
-                key={code}
-                active={member.lang === code}
-                onClick={() => patchMember(member.id, { lang: code })}
-              >
-                {code.toUpperCase()}
-              </SegmentedOption>
-            ))}
           </span>
 
           <span className="flex items-center gap-2">
@@ -83,15 +80,48 @@ export function TeamTable({ members }: { members: TeamMember[] }) {
             checked={member.onShift}
             label={`${member.name} on shift`}
             onChange={() =>
-              patchMember(member.id, {
-                onShift: !member.onShift,
-                lastActive: member.onShift ? member.lastActive : "Active now",
-              })
+              patchMember(member.id, { onShift: !member.onShift })
             }
           />
 
           <span className="font-mono text-[11.5px] text-faint">
-            {member.lastActive}
+            {member.hasPassword ? formatWhen(member.lastActive) : "invited"}
+          </span>
+
+          <span className="flex justify-end gap-1">
+            <button
+              type="button"
+              onClick={() =>
+                askConfirm({
+                  title: `Reset ${member.name}'s password?`,
+                  body: `A new password is generated and emailed to ${member.email}. The old one stops working immediately.`,
+                  confirmLabel: "Reset and email",
+                  onConfirm: () => resetMemberPassword(member),
+                })
+              }
+              className={ACTION}
+            >
+              Reset password
+            </button>
+            {member.email === currentEmail ? null : (
+              <button
+                type="button"
+                onClick={() =>
+                  askConfirm({
+                    title: `Remove ${member.name}?`,
+                    body: `${member.name} can no longer sign in. Requests they handled stay in the inbox.`,
+                    confirmLabel: "Remove",
+                    onConfirm: () => removeMember(member),
+                  })
+                }
+                className={cn(
+                  ACTION,
+                  "border-urgent/40 bg-urgent/8 font-medium text-urgent hover:border-urgent hover:text-urgent",
+                )}
+              >
+                Remove
+              </button>
+            )}
           </span>
         </div>
       ))}

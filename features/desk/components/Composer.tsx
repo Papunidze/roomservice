@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, CornerDownRight, Lock } from "lucide-react";
+import { Camera, Lock } from "lucide-react";
 import { useState } from "react";
 
 import type { GuestLanguage, Message } from "@/features/requests";
@@ -20,12 +20,12 @@ type Reply = Pick<Message, "text" | "lang" | "translations" | "photo">;
 interface ComposerProps {
   guestLanguage: GuestLanguage;
   staffLang: LangCode;
-  onSend: (message: Reply) => void;
-  onAddNote: (text: string) => void;
+  onSend: (message: Reply) => Promise<boolean>;
+  onAddNote: (text: string) => Promise<boolean>;
 }
 
-const TOGGLE =
-  "inline-flex min-h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs transition-colors";
+const TAB =
+  "min-h-8.5 cursor-pointer rounded-full px-3.5 text-[12.5px] font-medium transition-colors";
 
 export function Composer({
   guestLanguage,
@@ -33,74 +33,94 @@ export function Composer({
   onSend,
   onAddNote,
 }: ComposerProps) {
+  const [isNote, setIsNote] = useState(false);
   const [cannedKey, setCannedKey] = useState<CannedKey | null>(null);
   const [freeText, setFreeText] = useState("");
-  const [isNote, setIsNote] = useState(false);
   const [hasPhoto, setHasPhoto] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const draft = cannedKey ? CANNED[cannedKey][staffLang] : freeText;
-  const canSend = draft.trim().length > 0;
+  const canSend = draft.trim().length > 0 && !isSending;
+  const staffName = DICTIONARY[staffLang].name;
 
-  const preview = buildPreview({
-    isNote,
-    cannedKey,
-    draft,
-    guestLanguage,
-    staffLang,
-  });
-
-  const send = () => {
+  const send = async () => {
     if (!canSend) return;
 
-    if (isNote) {
-      onAddNote(draft.trim());
-    } else {
-      onSend({
-        text: draft.trim(),
-        lang: staffLang,
-        translations: cannedKey ? CANNED[cannedKey] : {},
-        photo: hasPhoto,
-      });
-    }
+    setIsSending(true);
+    const isSent = isNote
+      ? await onAddNote(draft.trim())
+      : await onSend({
+          text: draft.trim(),
+          lang: staffLang,
+          translations: cannedKey ? CANNED[cannedKey] : {},
+          photo: hasPhoto,
+        });
+    setIsSending(false);
+    if (!isSent) return;
 
     setCannedKey(null);
     setFreeText("");
     setHasPhoto(false);
-    setIsNote(false);
   };
 
   return (
-    <div className="border-t border-line px-7.5 pt-3 pb-5.5">
+    <div className="border-t border-line bg-surface px-7.5 pt-3.5 pb-5">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-xs text-faint">Quick replies</span>
-        {CANNED_KEYS.map((key) => (
+        <div className="flex gap-0.5 rounded-full bg-ink/5 p-[3px]">
           <button
-            key={key}
+            type="button"
+            onClick={() => setIsNote(false)}
+            className={cn(TAB, !isNote ? "bg-ink text-paper" : "text-muted")}
+          >
+            Reply to guest
+          </button>
+          <button
             type="button"
             onClick={() => {
-              setCannedKey(key);
-              setIsNote(false);
+              setIsNote(true);
+              setCannedKey(null);
             }}
             className={cn(
-              "min-h-8 cursor-pointer rounded-full border px-3.5 text-xs font-medium text-sage-deep transition-colors",
-              cannedKey === key && !isNote
-                ? "border-sage bg-sage/10"
-                : "border-line-strong",
+              TAB,
+              "flex items-center gap-1.5",
+              isNote ? "bg-note-ink text-paper" : "text-muted",
             )}
           >
-            {CANNED_LABEL[key]}
+            <Lock strokeWidth={1.8} className="size-3" />
+            Internal note
           </button>
-        ))}
+        </div>
+
+        {isNote ? null : (
+          <>
+            <span className="ml-2 text-[12px] text-faint">Quick replies</span>
+            {CANNED_KEYS.map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setCannedKey(cannedKey === key ? null : key)}
+                className={cn(
+                  "min-h-8 cursor-pointer rounded-full border px-3.5 text-xs font-medium transition-colors",
+                  cannedKey === key
+                    ? "border-sage bg-sage/10 text-sage-deep"
+                    : "border-line-strong text-muted",
+                )}
+              >
+                {CANNED_LABEL[key]}
+              </button>
+            ))}
+          </>
+        )}
       </div>
 
       <div
         className={cn(
-          "mt-2.5 rounded-tile border transition-colors",
+          "mt-3 rounded-tile border transition-colors",
           isNote ? "border-sand bg-sand/28" : "border-line-strong bg-paper",
         )}
       >
         <textarea
-          rows={3}
+          rows={2}
           dir={isNote ? "ltr" : DICTIONARY[staffLang].dir}
           value={draft}
           onChange={(event) => {
@@ -110,138 +130,62 @@ export function Composer({
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
-              send();
+              void send();
             }
           }}
           placeholder={
             isNote
-              ? "Write a note for the team…"
-              : `Write in ${DICTIONARY[staffLang].name}…`
+              ? "A note for your team. The guest never sees it."
+              : `Write in ${staffName}. The guest gets it in ${guestLanguage.name}.`
           }
           aria-label={isNote ? "Internal note" : "Reply to guest"}
           className={cn(
-            "w-full resize-none bg-transparent px-4 pt-3.5 pb-1.5 text-sm leading-relaxed outline-none",
+            "w-full resize-none bg-transparent px-4 pt-3.5 pb-2 text-[14.5px] leading-relaxed outline-none",
             isNote ? "font-sans" : scriptFont(staffLang),
           )}
         />
 
-        <div className="flex items-start gap-2 px-4 pb-2 text-[12.5px] leading-snug">
-          <CornerDownRight
-            strokeWidth={1.5}
-            className="mt-0.5 size-3.5 shrink-0 text-sage"
-          />
-          <span className="shrink-0 text-faint">{preview.label}</span>
-          <span
-            dir={preview.dir}
-            className={cn(
-              preview.emphasised ? "text-ink" : "text-faint",
-              preview.font,
-            )}
-          >
-            {preview.text}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5 border-t border-dashed border-line-dashed py-2.5 pr-2.5 pl-3">
-          <button
-            type="button"
-            disabled={isNote}
-            onClick={() => setHasPhoto(!hasPhoto)}
-            className={cn(
-              TOGGLE,
-              "disabled:cursor-default disabled:opacity-40",
-              hasPhoto
-                ? "border-sage text-sage-deep"
-                : "border-line-strong text-muted",
-            )}
-          >
-            <Camera strokeWidth={1.5} className="size-3.5" />
-            {hasPhoto ? "IMG_2043.jpg" : "Photo"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setIsNote(!isNote);
-              setCannedKey(null);
-            }}
-            className={cn(
-              TOGGLE,
-              isNote
-                ? "border-note-ink/60 bg-sand/60 text-note-ink"
-                : "border-line-strong text-muted",
-            )}
-          >
-            <Lock strokeWidth={1.6} className="size-3" />
-            Internal note
-          </button>
+        <div className="flex items-center gap-2 px-3 pb-3">
+          {cannedKey ? (
+            <span className="flex min-w-0 items-center gap-2 pl-1 text-[12.5px]">
+              <span className="shrink-0 text-faint">Guest gets:</span>
+              <span
+                dir={guestLanguage.dir}
+                className={cn("truncate", scriptFont(guestLanguage.base))}
+              >
+                {CANNED[cannedKey][guestLanguage.base]}
+              </span>
+            </span>
+          ) : null}
           <span className="flex-1" />
           {isNote ? null : (
-            <span className="text-[11.5px] text-ghost">
-              Enter to send · Shift+Enter for a new line
-            </span>
+            <button
+              type="button"
+              onClick={() => setHasPhoto(!hasPhoto)}
+              className={cn(
+                "inline-flex min-h-8.5 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs transition-colors",
+                hasPhoto
+                  ? "border-sage text-sage-deep"
+                  : "border-line-strong text-muted",
+              )}
+            >
+              <Camera strokeWidth={1.5} className="size-3.5" />
+              {hasPhoto ? "Photo attached" : "Add photo"}
+            </button>
           )}
           <button
             type="button"
-            onClick={send}
+            onClick={() => void send()}
             disabled={!canSend}
             className={cn(
-              "min-h-9 cursor-pointer rounded-full px-5 text-[12.5px] font-medium text-paper transition-colors disabled:cursor-default disabled:bg-disabled disabled:text-ghost",
+              "min-h-9 cursor-pointer rounded-full px-5 text-[13px] font-medium text-paper transition-colors disabled:cursor-default disabled:bg-disabled disabled:text-ghost",
               isNote ? "bg-note-ink" : "bg-sage",
             )}
           >
-            {isNote ? "Add note" : "Send"}
+            {isSending ? "Sending…" : isNote ? "Save note" : "Send reply"}
           </button>
         </div>
       </div>
     </div>
   );
-}
-
-function buildPreview({
-  isNote,
-  cannedKey,
-  draft,
-  guestLanguage,
-  staffLang,
-}: {
-  isNote: boolean;
-  cannedKey: CannedKey | null;
-  draft: string;
-  guestLanguage: GuestLanguage;
-  staffLang: LangCode;
-}) {
-  if (isNote)
-    return {
-      label: "Internal note —",
-      text: "saved to the ticket, never sent to the guest.",
-      dir: "ltr" as const,
-      font: "",
-      emphasised: false,
-    };
-
-  if (cannedKey)
-    return {
-      label: `Guest reads in ${guestLanguage.name}:`,
-      text: CANNED[cannedKey][guestLanguage.base],
-      dir: guestLanguage.dir,
-      font: scriptFont(guestLanguage.base),
-      emphasised: true,
-    };
-
-  if (draft.trim())
-    return {
-      label: `Sent as written in ${DICTIONARY[staffLang].name} —`,
-      text: "the guest sees your words unchanged.",
-      dir: "ltr" as const,
-      font: "",
-      emphasised: false,
-    };
-
-  return {
-    label: "",
-    text: `Write in ${DICTIONARY[staffLang].name} or pick a quick reply.`,
-    dir: "ltr" as const,
-    font: "",
-    emphasised: false,
-  };
 }

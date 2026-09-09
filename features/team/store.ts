@@ -1,101 +1,97 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { z } from "zod";
+import { watchHotel } from "@/features/requests";
+import { createRemoteStore, useRemote } from "@/shared/lib/remote-store";
+import { showToast } from "@/shared/ui";
 
-import { langCodeSchema, STAFF, STAFF_ROLES } from "@/features/requests";
-import { createStore } from "@/shared/lib/store";
+import {
+  fetchTeam,
+  inviteMemberApi,
+  patchMemberApi,
+  patchTeamConfig,
+  removeMemberApi,
+  resetMemberPasswordApi,
+} from "./api";
+import type { TeamConfig, TeamMember, TeamState } from "./types";
 
-import type { TeamMember, TeamState } from "./types";
-
-const PROFILE: Record<
-  string,
-  Pick<TeamMember, "lang" | "telegram" | "onShift" | "lastActive">
-> = {
-  nino: { lang: "ka", telegram: true, onShift: true, lastActive: "Active now" },
-  giorgi: {
-    lang: "ka",
-    telegram: true,
-    onShift: true,
-    lastActive: "2 min ago",
-  },
-  leila: {
-    lang: "en",
-    telegram: false,
-    onShift: true,
-    lastActive: "14 min ago",
-  },
-  davit: {
-    lang: "en",
-    telegram: true,
-    onShift: false,
-    lastActive: "Yesterday 21:40",
-  },
-};
-
-export const TEAM_SEED: TeamState = {
-  members: STAFF.map((person) => ({
-    ...person,
-    email: `${person.id}@batumipalace.ge`,
-    ...(PROFILE[person.id] ?? {
-      lang: "en" as const,
-      telegram: false,
-      onShift: false,
-      lastActive: "never",
-    }),
-  })),
-  routing: {
-    maintenance: "Maintenance",
-    housekeeping: "Housekeeping",
-    frontDesk: "Front desk",
-  },
-  autoAssign: true,
-  escalation: { enabled: true, minutes: 15, target: "Manager" },
-};
-
-const roleSchema = z.enum(STAFF_ROLES);
-
-const teamSchema = z.object({
-  members: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      email: z.string(),
-      role: roleSchema,
-      lang: langCodeSchema,
-      telegram: z.boolean(),
-      onShift: z.boolean(),
-      lastActive: z.string(),
-    }),
-  ),
-  routing: z.object({
-    maintenance: roleSchema,
-    housekeeping: roleSchema,
-    frontDesk: roleSchema,
-  }),
-  autoAssign: z.boolean(),
-  escalation: z.object({
-    enabled: z.boolean(),
-    minutes: z.number(),
-    target: z.string(),
-  }),
+const store = createRemoteStore<TeamState>({
+  load: fetchTeam,
+  watch: (refresh) => watchHotel("team", refresh),
 });
 
-const store = createStore<TeamState>("roomcall.team", TEAM_SEED, teamSchema);
+export const useOptionalTeam = () => useRemote(store);
 
-export const useTeam = () =>
-  useSyncExternalStore(store.subscribe, store.get, store.getServer);
-
-export function updateTeam(patch: Partial<TeamState>) {
-  store.set({ ...store.get(), ...patch });
+export function useTeam() {
+  const team = useRemote(store);
+  if (!team) throw new Error("Team is read before it is loaded");
+  return team;
 }
 
-export function patchMember(id: string, patch: Partial<TeamMember>) {
-  updateTeam({
-    members: store
-      .get()
-      .members.map((member) =>
-        member.id === id ? { ...member, ...patch } : member,
-      ),
+export async function updateTeam(patch: Partial<TeamConfig>) {
+  const current = store.get();
+  if (!current) return;
+
+  store.set({ ...current, ...patch });
+  const result = await patchTeamConfig(patch);
+  if (!result.ok) {
+    store.set(current);
+    showToast(result.message);
+  }
+}
+
+export async function patchMember(
+  id: string,
+  patch: Parameters<typeof patchMemberApi>[1],
+) {
+  const current = store.get();
+  if (!current) return;
+
+  store.set({
+    ...current,
+    members: current.members.map((member) =>
+      member.id === id ? { ...member, ...patch } : member,
+    ),
   });
+  const result = await patchMemberApi(id, patch);
+  if (!result.ok) {
+    store.set(current);
+    showToast(result.message);
+  }
+}
+
+export async function inviteMember(
+  input: Parameters<typeof inviteMemberApi>[0],
+) {
+  const result = await inviteMemberApi(input);
+  if (!result.ok) return result;
+
+  const current = store.get();
+  if (current)
+    store.set({
+      ...current,
+      members: [...current.members, result.data.member],
+    });
+  return result;
+}
+
+export async function removeMember(member: TeamMember) {
+  const current = store.get();
+  if (!current) return;
+
+  const result = await removeMemberApi(member.id);
+  if (!result.ok) {
+    showToast(result.message);
+    return;
+  }
+  store.set({
+    ...current,
+    members: current.members.filter((item) => item.id !== member.id),
+  });
+}
+
+export async function resetMemberPassword(member: TeamMember) {
+  const result = await resetMemberPasswordApi(member.id);
+  showToast(
+    result.ok ? `New password emailed to ${member.email}` : result.message,
+  );
 }

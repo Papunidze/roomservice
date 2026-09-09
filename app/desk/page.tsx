@@ -7,6 +7,12 @@ export const metadata: Metadata = {
 };
 
 export default async function Page({ searchParams }: PageProps<"/desk">) {
-  const { room } = await searchParams;
-  return <DeskInbox initialRoom={typeof room === "string" ? room : ""} />;
+  const { room, open } = await searchParams;
+  const openId = typeof open === "string" ? Number.parseInt(open, 10) : NaN;
+  return (
+    <DeskInbox
+      initialRoom={typeof room === "string" ? room : ""}
+      initialOpenId={Number.isNaN(openId) ? null : openId}
+    />
+  );
 }

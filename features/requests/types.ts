@@ -29,25 +29,7 @@ export const STAFF_ROLES = [
 
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
-export interface StaffMember {
-  id: string;
-  name: string;
-  role: StaffRole;
-}
-
-export const STAFF: StaffMember[] = [
-  { id: "nino", name: "Nino T.", role: "Front desk" },
-  { id: "giorgi", name: "Giorgi M.", role: "Maintenance" },
-  { id: "leila", name: "Leila A.", role: "Housekeeping" },
-  { id: "davit", name: "Davit K.", role: "Manager" },
-];
-
 export const UNASSIGNED = "Unassigned";
-
-export const STAFF_MEMBERS = [
-  UNASSIGNED,
-  ...STAFF.map((person) => person.name),
-];
 
 export interface GuestLanguage {
   name: string;
@@ -68,6 +50,7 @@ export interface Message {
   text: string;
   translations: Partial<Record<LangCode, string>>;
   photo?: boolean;
+  freeText?: boolean;
   minutesAgo: number;
 }
 
@@ -81,6 +64,7 @@ export interface Request {
   minutesAgo: number;
   assignee: string;
   archived?: boolean;
+  createdAt?: string;
   thread: Message[];
 }
 

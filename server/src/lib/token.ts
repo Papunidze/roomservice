@@ -21,3 +21,24 @@ export async function readSessionToken(token: string) {
   const { payload } = await jwtVerify(token, secret, { issuer: ISSUER });
   return payload.sub ?? null;
 }
+
+const SECOND_FACTOR = "second-factor";
+
+export function signSecondFactorTicket(userId: string) {
+  return new SignJWT()
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(userId)
+    .setIssuer(ISSUER)
+    .setAudience(SECOND_FACTOR)
+    .setIssuedAt()
+    .setExpirationTime("5m")
+    .sign(secret);
+}
+
+export async function readSecondFactorTicket(ticket: string) {
+  const { payload } = await jwtVerify(ticket, secret, {
+    issuer: ISSUER,
+    audience: SECOND_FACTOR,
+  });
+  return payload.sub ?? null;
+}

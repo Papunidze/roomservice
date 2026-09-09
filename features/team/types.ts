@@ -9,7 +9,8 @@ export interface TeamMember {
   lang: LangCode;
   telegram: boolean;
   onShift: boolean;
-  lastActive: string;
+  lastActive: string | null;
+  hasPassword: boolean;
 }
 
 export const ROUTING_GROUPS = [
@@ -23,13 +24,16 @@ export const ROUTING_GROUPS = [
 
 export type RoutingGroup = (typeof ROUTING_GROUPS)[number]["key"];
 
-export interface TeamState {
-  members: TeamMember[];
+export interface TeamConfig {
   routing: Record<RoutingGroup, StaffRole>;
   autoAssign: boolean;
   escalation: {
     enabled: boolean;
     minutes: number;
-    target: string;
+    target: StaffRole;
   };
+}
+
+export interface TeamState extends TeamConfig {
+  members: TeamMember[];
 }

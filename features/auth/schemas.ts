@@ -6,5 +6,7 @@ export const sessionSchema = z
     name: z.string(),
     email: z.string(),
     hotel: z.string(),
+    role: z.string(),
+    twoFactorEnabled: z.boolean().default(false),
   })
   .nullable();

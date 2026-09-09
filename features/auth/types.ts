@@ -3,4 +3,6 @@ export interface Session {
   name: string;
   email: string;
   hotel: string;
+  role: string;
+  twoFactorEnabled: boolean;
 }

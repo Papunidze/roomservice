@@ -17,7 +17,7 @@ const messageSchema = z.object({
   minutesAgo: z.number(),
 });
 
-const requestSchema = z.object({
+export const requestSchema = z.object({
   id: z.number(),
   room: z.string(),
   category: z.enum(CATEGORIES),
@@ -33,6 +33,7 @@ const requestSchema = z.object({
   minutesAgo: z.number(),
   assignee: z.string(),
   archived: z.boolean().optional(),
+  createdAt: z.string().optional(),
   thread: z.array(messageSchema),
 });
 

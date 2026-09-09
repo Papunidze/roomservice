@@ -1,6 +1,7 @@
 @host = http://localhost:4000
 @email = nino@batumipalace.ge
 @password = not-a-real-password
+@token = paste-a-room-token
 
 ### health
 GET {{host}}/health
@@ -70,3 +71,42 @@ Content-Type: application/json
 
 ### google sign-in (open in a browser)
 GET {{host}}/api/auth/google
+
+### settings
+GET {{host}}/api/settings
+
+### rooms
+POST {{host}}/api/rooms
+Content-Type: application/json
+
+{ "numbers": ["101", "102", "205"] }
+
+### guest bootstrap (token from the room URL)
+GET {{host}}/api/guest/{{token}}
+
+### guest request
+POST {{host}}/api/guest/{{token}}/requests
+Content-Type: application/json
+
+{
+  "category": "ac",
+  "urgency": "high",
+  "language": { "name": "Arabic", "native": "العربية", "code": "AR", "dir": "rtl", "base": "ar" },
+  "text": "المكيف لا يعمل",
+  "translations": { "en": "The AC is not working" }
+}
+
+### desk inbox
+GET {{host}}/api/requests
+
+### desk reply
+POST {{host}}/api/requests/1/reply
+Content-Type: application/json
+
+{ "text": "On our way", "lang": "en", "translations": { "ar": "نحن في الطريق" } }
+
+### team
+GET {{host}}/api/team
+
+### analytics
+GET {{host}}/api/analytics?range=7d

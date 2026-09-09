@@ -22,19 +22,28 @@ export function RoutingCard({ team }: { team: TeamState }) {
       <div className="flex items-center gap-3">
         <div className="flex-1">
           <div className="text-base font-semibold tracking-[-0.02em]">
-            Routing rules
+            Who gets each request
           </div>
           <div className="mt-0.5 text-[12.5px] text-faint">
-            Which role a new ticket goes to, by category.
+            A new request is sent to one role, chosen by what the guest asked
+            for.
           </div>
         </div>
-        <span className="text-[12.5px] text-muted">Auto-assign on arrival</span>
+        <span className="text-[12.5px] text-muted">
+          Hand it to someone on shift
+        </span>
         <Switch
           checked={team.autoAssign}
           label="Auto-assign on arrival"
           onChange={() => updateTeam({ autoAssign: !team.autoAssign })}
         />
       </div>
+
+      <p className="mt-3 rounded-[14px] bg-paper px-4 py-3 text-[12.5px] leading-relaxed text-soft">
+        {team.autoAssign
+          ? "On: the request is assigned straight to a member of that role who is on shift, so it shows up under “Mine” for them. If nobody from the role is on shift, it waits unassigned."
+          : "Off: the request waits in the inbox as “Nobody assigned” until someone takes it."}
+      </p>
 
       <div className="mt-3.5 flex flex-col">
         {ROUTING_GROUPS.map((group) => (

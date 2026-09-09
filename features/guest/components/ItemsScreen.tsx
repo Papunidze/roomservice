@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { itemLabel, useSettings } from "@/features/requests";
+import { itemLabel, type GuestSettings } from "@/features/requests";
 import type { LangCode, Phrases } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 
@@ -13,6 +13,7 @@ import { ScreenHeader } from "./ScreenHeader";
 interface ItemsScreenProps {
   phrases: Phrases;
   lang: LangCode;
+  settings: GuestSettings;
   onBack: () => void;
   onSubmit: (picks: ItemPick[]) => void;
 }
@@ -23,10 +24,10 @@ const stepperClass =
 export function ItemsScreen({
   phrases,
   lang,
+  settings,
   onBack,
   onSubmit,
 }: ItemsScreenProps) {
-  const settings = useSettings();
   const [counts, setCounts] = useState<Record<string, number>>({});
 
   const offered = settings.items.filter((item) => item.available);

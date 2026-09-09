@@ -2,26 +2,33 @@
 
 import { Hotel } from "lucide-react";
 
-import { TIMEZONES, updateSettings, type Settings } from "@/features/requests";
-import { DICTIONARY, LANGUAGES, scriptFont } from "@/shared/i18n";
+import { TIMEZONES, type Settings } from "@/features/requests";
+import {
+  DICTIONARY,
+  LANGUAGES,
+  scriptFont,
+  type LangCode,
+} from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 import {
-  Button,
   Field,
   FIELD_CONTROL,
   Flag,
-  SegmentedOption,
   showToast,
   Switch,
   TextField,
 } from "@/shared/ui";
 
-import { PANEL_CARD, PanelHeading } from "./PanelHeading";
+import {
+  PANEL_CARD,
+  PanelHeading,
+  type SettingsPanelProps,
+} from "./PanelHeading";
 
-export function HotelProfilePanel({ settings }: { settings: Settings }) {
+export function HotelProfilePanel({ settings, onChange }: SettingsPanelProps) {
   const { hotel } = settings;
   const setHotel = (patch: Partial<Settings["hotel"]>) =>
-    updateSettings({ hotel: { ...hotel, ...patch } });
+    onChange({ hotel: { ...hotel, ...patch } });
 
   return (
     <div className="animate-rise max-w-190">
@@ -81,9 +88,8 @@ export function HotelProfilePanel({ settings }: { settings: Settings }) {
       <div className={cn(PANEL_CARD, "mt-3.5 p-6")}>
         <div className="text-[15px] font-semibold">Guest languages</div>
         <div className="mt-0.5 text-[12.5px] text-faint">
-          Shown on the language screen after a scan. A guest can always type
-          another language under “Other”, and the app falls back to English
-          copy.
+          Shown on the language screen after a scan. A guest whose language is
+          switched off gets English copy.
         </div>
 
         <div className="mt-2.5 flex flex-col">
@@ -116,7 +122,7 @@ export function HotelProfilePanel({ settings }: { settings: Settings }) {
                   checked={on}
                   label={`${DICTIONARY[code].name} available to guests`}
                   onChange={() =>
-                    updateSettings({
+                    onChange({
                       guestLanguages: {
                         ...settings.guestLanguages,
                         [code]: !on,
@@ -131,31 +137,30 @@ export function HotelProfilePanel({ settings }: { settings: Settings }) {
 
         <div className="mt-4 flex items-center justify-between gap-3 border-t border-line-soft pt-4">
           <span>
-            <span className="block text-sm">
-              Staff display language default
-            </span>
+            <span className="block text-sm">Team language</span>
             <span className="mt-0.5 block text-[12.5px] text-faint">
-              New members start here; each person can change it in their menu.
+              Guest messages are translated into it, and replies are written in
+              it. The console itself is always in English.
             </span>
           </span>
-          <span className="flex gap-0.5 rounded-full bg-ink/5 p-0.5">
-            {(["ka", "en"] as const).map((code) => (
-              <SegmentedOption
-                key={code}
-                active={settings.staffDefaultLang === code}
-                onClick={() => updateSettings({ staffDefaultLang: code })}
-              >
-                {code.toUpperCase()}
-              </SegmentedOption>
-            ))}
-          </span>
+          <label>
+            <span className="sr-only">Team language</span>
+            <select
+              value={settings.staffLang}
+              onChange={(event) => {
+                const staffLang = event.target.value as LangCode;
+                onChange({ staffLang, staffDefaultLang: staffLang });
+              }}
+              className="min-h-9.5 cursor-pointer rounded-full border border-line-strong bg-surface px-3.5 text-[13px] font-medium outline-none"
+            >
+              {LANGUAGES.map((code) => (
+                <option key={code} value={code}>
+                  {DICTIONARY[code].name}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
-      </div>
-
-      <div className="mt-4 flex justify-end">
-        <Button onClick={() => showToast("Settings saved")}>
-          Save changes
-        </Button>
       </div>
     </div>
   );

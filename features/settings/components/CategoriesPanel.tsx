@@ -10,13 +10,16 @@ import {
   STAFF_ROLES,
   type StaffRole,
   type Urgency,
-  updateSettings,
   type Settings,
 } from "@/features/requests";
 import { cn } from "@/shared/lib/cn";
 import { Button, showToast, Switch } from "@/shared/ui";
 
-import { PANEL_CARD, PanelHeading } from "./PanelHeading";
+import {
+  PANEL_CARD,
+  PanelHeading,
+  type SettingsPanelProps,
+} from "./PanelHeading";
 
 const URGENCIES: { value: Urgency; label: string }[] = [
   { value: "high", label: "Urgent" },
@@ -31,14 +34,14 @@ const GRID = "grid grid-cols-[1fr_150px_160px_60px] items-center gap-3";
 
 const CATALOGUE = new Set<string>(ITEM_KEYS);
 
-export function CategoriesPanel({ settings }: { settings: Settings }) {
+export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
   const [draft, setDraft] = useState("");
 
   const setCategory = (
     key: (typeof CONFIGURABLE_CATEGORIES)[number],
     patch: Partial<Settings["categories"][typeof key]>,
   ) =>
-    updateSettings({
+    onChange({
       categories: {
         ...settings.categories,
         [key]: { ...settings.categories[key], ...patch },
@@ -48,7 +51,7 @@ export function CategoriesPanel({ settings }: { settings: Settings }) {
   const addItem = () => {
     const label = draft.trim();
     if (!label) return;
-    updateSettings({
+    onChange({
       items: [
         ...settings.items,
         {
@@ -205,7 +208,7 @@ export function CategoriesPanel({ settings }: { settings: Settings }) {
             <button
               type="button"
               onClick={() =>
-                updateSettings({
+                onChange({
                   items: settings.items.map((entry) =>
                     entry.key === item.key
                       ? { ...entry, available: !entry.available }

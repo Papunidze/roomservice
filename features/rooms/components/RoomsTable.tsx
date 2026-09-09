@@ -2,6 +2,7 @@
 
 import { DICTIONARY } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
+import { formatWhen } from "@/shared/lib/time";
 
 import type { Room } from "../types";
 
@@ -19,7 +20,6 @@ interface RoomsTableProps {
   onToggle: (no: string) => void;
   onToggleAll: () => void;
   onShowPlate: (no: string) => void;
-  onRegenerate: (no: string) => void;
   onCloseSession: (room: Room) => void;
 }
 
@@ -31,7 +31,6 @@ export function RoomsTable({
   onToggle,
   onToggleAll,
   onShowPlate,
-  onRegenerate,
   onCloseSession,
 }: RoomsTableProps) {
   const allSelected = selected.size === rooms.length && rooms.length > 0;
@@ -53,8 +52,8 @@ export function RoomsTable({
         />
         <span>Room</span>
         <span>Floor</span>
-        <span>QR status</span>
-        <span>Active session</span>
+        <span>Plate</span>
+        <span>Guest</span>
         <span>Open</span>
         <span>Last activity</span>
         <span />
@@ -110,7 +109,9 @@ export function RoomsTable({
                     : "No guest"}
                 </span>
                 <span className="truncate text-xs text-faint">
-                  {room.session ? `since ${room.session.since}` : ""}
+                  {room.session
+                    ? `since ${formatWhen(room.session.since)}`
+                    : ""}
                 </span>
               </span>
               <span
@@ -122,7 +123,7 @@ export function RoomsTable({
                 {open || "—"}
               </span>
               <span className="font-mono text-[11.5px] text-faint">
-                {room.lastActivity}
+                {formatWhen(room.lastActivity)}
               </span>
               <span className="flex justify-end gap-1">
                 <button
@@ -130,26 +131,17 @@ export function RoomsTable({
                   onClick={() => onShowPlate(room.no)}
                   className={ACTION}
                 >
-                  QR
+                  Plate
                 </button>
-                <button
-                  type="button"
-                  onClick={() => onRegenerate(room.no)}
-                  className={ACTION}
-                >
-                  Regenerate
-                </button>
-                <button
-                  type="button"
-                  disabled={!room.session}
-                  onClick={() => onCloseSession(room)}
-                  className={cn(
-                    ACTION,
-                    "disabled:cursor-default disabled:opacity-35",
-                  )}
-                >
-                  Close
-                </button>
+                {room.session ? (
+                  <button
+                    type="button"
+                    onClick={() => onCloseSession(room)}
+                    className={ACTION}
+                  >
+                    Check out
+                  </button>
+                ) : null}
               </span>
             </div>
           );

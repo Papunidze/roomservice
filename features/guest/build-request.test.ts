@@ -131,3 +131,25 @@ describe("checkoutRequest", () => {
     expect(message?.translations.tr).toBe("Geç çıkış — 14:00");
   });
 });
+
+describe("free text flag", () => {
+  const base = { room: "205", language: guestLanguage("ar") };
+
+  it("marks a problem with a typed note as free text", () => {
+    const draft = problemRequest(base, {
+      keys: ["ac"],
+      note: "loud",
+      photo: false,
+    });
+    expect(draft.thread[0]?.freeText).toBe(true);
+  });
+
+  it("keeps chip-only problems as phrasebook text", () => {
+    const draft = problemRequest(base, {
+      keys: ["ac"],
+      note: "  ",
+      photo: false,
+    });
+    expect(draft.thread[0]?.freeText).toBe(false);
+  });
+});

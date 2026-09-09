@@ -22,6 +22,17 @@ export const resetPasswordSchema = z.object({
   password,
 });
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().max(200).default(""),
+  newPassword: password,
+});
+
+const code = z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code");
+
+export const twoFactorCodeSchema = z.object({ code });
+
+export const secondFactorSchema = z.object({ ticket: z.string().min(1), code });
+
 export const googleCallbackSchema = z.object({
   code: z.string().min(1),
   state: z.string().min(1),

@@ -3,6 +3,7 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
+import { useSession } from "@/features/auth";
 import { Button } from "@/shared/ui";
 
 import { useTeam } from "../store";
@@ -13,6 +14,7 @@ import { TeamTable } from "./TeamTable";
 
 export function TeamScreen() {
   const team = useTeam();
+  const currentEmail = useSession()?.email ?? "";
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   const onShift = team.members.filter((member) => member.onShift).length;
@@ -39,7 +41,7 @@ export function TeamScreen() {
         </Button>
       </div>
 
-      <TeamTable members={team.members} />
+      <TeamTable members={team.members} currentEmail={currentEmail} />
 
       <div className="mt-4.5 grid grid-cols-[1.3fr_1fr] gap-4.5">
         <RoutingCard team={team} />

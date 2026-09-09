@@ -1,9 +1,6 @@
 import Link from "next/link";
 
-const LINKS = [
-  { href: "/r/205", label: "Guest demo" },
-  { href: "/desk", label: "Front desk" },
-];
+const LINKS = [{ href: "/desk", label: "Front desk" }];
 
 export function SiteFooter() {
   return (

@@ -1,13 +1,21 @@
 "use client";
 
-import { Download, Plus, X } from "lucide-react";
+import { Plus, Printer, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
 import { useRequests, useSettings } from "@/features/requests";
 import { LANGUAGES } from "@/shared/i18n";
 import { askConfirm, Button, showToast } from "@/shared/ui";
 
-import { addRooms, markPrinted, patchRoom, useRooms } from "../store";
+import { openPlatePrint } from "../print";
+import {
+  addRooms,
+  closeGuestSession,
+  markPrinted,
+  regenerateRoom,
+  removeRooms,
+  useRooms,
+} from "../store";
 import type { Room } from "../types";
 import { AddRoomsModal } from "./AddRoomsModal";
 import { QrPlatePanel } from "./QrPlatePanel";
@@ -31,9 +39,8 @@ export function RoomsScreen() {
   const plateLanguages = LANGUAGES.filter(
     (code) => settings.guestLanguages[code],
   );
-  const withSession = rooms.filter((room) => room.session).length;
+  const withGuest = rooms.filter((room) => room.session).length;
   const unprinted = rooms.filter((room) => !room.printed).length;
-  const floors = new Set(rooms.map((room) => room.floor)).size;
 
   const toggle = (no: string) =>
     setSelected((current) => {
@@ -49,26 +56,43 @@ export function RoomsScreen() {
         : new Set(rooms.map((room) => room.no)),
     );
 
+  const printPlates = (numbers: string[]) => {
+    openPlatePrint(numbers);
+    void markPrinted(numbers);
+    setSelected(new Set());
+  };
+
   const regenerate = (no: string) =>
     askConfirm({
-      title: `Regenerate QR for room ${no}?`,
+      title: `Issue a new code for room ${no}?`,
       body: "The plate currently in the room stops working the moment you confirm. Print and replace it before the next check-in.",
-      confirmLabel: "Regenerate",
-      onConfirm: () => {
-        patchRoom(no, { printed: false });
-        showToast(`QR regenerated for room ${no} · old code disabled`);
+      confirmLabel: "Issue new code",
+      onConfirm: async () => {
+        if (await regenerateRoom(no))
+          showToast(`New code issued for room ${no} · old plate disabled`);
       },
     });
 
-  const closeSession = (room: Room) => {
-    patchRoom(room.no, { session: null });
-    showToast(`Session closed for room ${room.no}`);
+  const deleteSelected = () => {
+    const numbers = [...selected];
+    askConfirm({
+      title: `Delete ${numbers.length} room${numbers.length === 1 ? "" : "s"}?`,
+      body: "Their plates stop working and their open requests are archived. This cannot be undone.",
+      confirmLabel: "Delete rooms",
+      onConfirm: async () => {
+        if (!(await removeRooms(numbers))) return;
+        setSelected(new Set());
+        if (plateRoom && numbers.includes(plateRoom)) setPlateRoom(null);
+        showToast(
+          `${numbers.length} room${numbers.length === 1 ? "" : "s"} deleted`,
+        );
+      },
+    });
   };
 
-  const bulkPrinted = () => {
-    markPrinted([...selected]);
-    showToast(`${selected.size} rooms marked as printed`);
-    setSelected(new Set());
+  const checkOut = async (room: Room) => {
+    if (await closeGuestSession(room.no))
+      showToast(`Room ${room.no} checked out`);
   };
 
   return (
@@ -80,56 +104,58 @@ export function RoomsScreen() {
               Rooms
             </div>
             <div className="mt-0.5 text-[12.5px] text-faint">
-              {rooms.length} rooms · {floors} floors · {withSession} active
-              sessions · {unprinted} plates not printed
+              {rooms.length} rooms · {withGuest} with a guest ·{" "}
+              {unprinted === 0
+                ? "all plates printed"
+                : `${unprinted} plate${unprinted === 1 ? "" : "s"} not printed yet`}
             </div>
           </div>
           <span className="flex-1" />
-
-          {selected.size > 0 ? (
-            <span className="inline-flex min-h-10 items-center gap-2.5 rounded-full bg-ink pr-1.5 pl-3.5 text-[12.5px] text-paper">
-              <span>{selected.size} selected</span>
-              <button
-                type="button"
-                onClick={bulkPrinted}
-                className="min-h-7.5 cursor-pointer rounded-full border border-paper/25 px-3 text-xs"
-              >
-                Mark printed
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  showToast(`QR pack · ${selected.size} plates · preparing PDF`)
-                }
-                className="min-h-7.5 cursor-pointer rounded-full border border-paper/25 px-3 text-xs"
-              >
-                QR pack
-              </button>
-              <button
-                type="button"
-                aria-label="Clear selection"
-                onClick={() => setSelected(new Set())}
-                className="grid size-7.5 cursor-pointer place-items-center rounded-full text-paper/70"
-              >
-                <X strokeWidth={1.6} className="size-3.5" />
-              </button>
-            </span>
-          ) : null}
-
           <Button
             variant="ghost"
-            onClick={() =>
-              showToast(`QR pack · ${rooms.length} plates · preparing PDF`)
-            }
+            disabled={rooms.length === 0}
+            onClick={() => printPlates(rooms.map((room) => room.no))}
           >
-            <Download strokeWidth={1.6} className="size-3.5" />
-            Download QR pack (PDF)
+            <Printer strokeWidth={1.6} className="size-3.5" />
+            Print all plates
           </Button>
           <Button onClick={() => setIsAddOpen(true)}>
             <Plus strokeWidth={1.8} className="size-3.5" />
             Add rooms
           </Button>
         </div>
+
+        {selected.size > 0 ? (
+          <div className="mb-3.5 flex items-center gap-3 rounded-full border border-sage/40 bg-sage/10 py-2 pr-2 pl-4.5 text-[13px]">
+            <span className="font-medium text-sage-deep">
+              {selected.size} room{selected.size === 1 ? "" : "s"} selected
+            </span>
+            <span className="text-muted">
+              Print their plates, then put one in each room.
+            </span>
+            <span className="flex-1" />
+            <Button
+              variant="ghost"
+              onClick={deleteSelected}
+              className="text-urgent hover:border-urgent/50 hover:text-urgent"
+            >
+              <Trash2 strokeWidth={1.6} className="size-3.5" />
+              Delete
+            </Button>
+            <Button onClick={() => printPlates([...selected])}>
+              <Printer strokeWidth={1.6} className="size-3.5" />
+              Print {selected.size} plate{selected.size === 1 ? "" : "s"}
+            </Button>
+            <button
+              type="button"
+              aria-label="Clear selection"
+              onClick={() => setSelected(new Set())}
+              className="grid size-9 cursor-pointer place-items-center rounded-full text-muted hover:text-ink"
+            >
+              <X strokeWidth={1.6} className="size-4" />
+            </button>
+          </div>
+        ) : null}
 
         <RoomsTable
           rooms={rooms}
@@ -139,8 +165,7 @@ export function RoomsScreen() {
           onToggle={toggle}
           onToggleAll={toggleAll}
           onShowPlate={setPlateRoom}
-          onRegenerate={regenerate}
-          onCloseSession={closeSession}
+          onCloseSession={checkOut}
         />
       </div>
 
@@ -151,7 +176,7 @@ export function RoomsScreen() {
           languages={plateLanguages}
           onClose={() => setPlateRoom(null)}
           onRegenerate={() => regenerate(active.no)}
-          onPrinted={() => patchRoom(active.no, { printed: true })}
+          onPrint={() => printPlates([active.no])}
         />
       ) : null}
 
@@ -159,11 +184,11 @@ export function RoomsScreen() {
         <AddRoomsModal
           rooms={rooms}
           onClose={() => setIsAddOpen(false)}
-          onCreate={(added) => {
-            addRooms(added);
+          onCreate={async (added) => {
+            if (!(await addRooms(added))) return;
             setIsAddOpen(false);
             showToast(
-              `${added.length} room${added.length === 1 ? "" : "s"} added · plates ready to print`,
+              `${added.length} room${added.length === 1 ? "" : "s"} added · select them and print the plates`,
             );
           }}
         />

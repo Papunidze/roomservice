@@ -29,11 +29,12 @@ interface DraftInput {
   urgency: Request["urgency"];
   build: (lang: LangCode) => string;
   photo?: boolean;
+  freeText?: boolean;
 }
 
 function draft(
   { room, language }: Base,
-  { category, urgency, build, photo }: DraftInput,
+  { category, urgency, build, photo, freeText }: DraftInput,
 ): Draft {
   const translations = translateAll(build);
   return {
@@ -51,6 +52,7 @@ function draft(
         text: build(language.base),
         translations,
         photo: photo ?? false,
+        freeText: freeText ?? false,
         minutesAgo: 0,
       },
     ],
@@ -66,6 +68,7 @@ export function problemRequest(
     category: input.keys[0] ?? "other",
     urgency: urgent ? "high" : "medium",
     photo: input.photo,
+    freeText: input.note.trim().length > 0,
     build: (lang) => {
       const phrases = DICTIONARY[lang];
       const chips =

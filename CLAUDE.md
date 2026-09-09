@@ -31,27 +31,50 @@ Currency: GEL (₾), stored as integer tetri.
 
 ## Current state
 
-The UI is complete and driven by static demo data. Apart from auth there is
-no backend: every mutable slice lives in a client-side store built on `useSyncExternalStore` +
-localStorage via `shared/lib/store.ts`, so a request sent from `/r/205` shows
-up on `/desk` in the same browser. There are five such stores — requests,
-settings (both in `features/requests`), rooms, team, and the staff session.
-"Translation" is a lookup table in `shared/i18n/dictionary.ts`, not a model
-call.
+The app runs against the API in `server/` (Express + MongoDB, own package).
+Every console slice — settings, rooms, requests, team, analytics — and the
+guest app read and write through it. Hotels are the tenant: registration
+creates a hotel and its first Manager, and every console route is scoped to
+the signed-in user's hotel.
 
-Auth is real and lives in `server/` (Express + MongoDB): register, login,
-logout, Google OAuth, forgot/reset password. The session is an HttpOnly cookie
-set by the API; the app calls the API origin directly with
-`credentials: "include"` (`NEXT_PUBLIC_API_ORIGIN`, default
-`http://localhost:4000`) through `features/auth/api.ts`, which is the only
-place that talks to it. `features/auth/store.ts` keeps a localStorage copy of
-the public user for instant header rendering; `AuthGate` in the desk layout
-re-checks `/api/auth/me` on mount and sends anonymous visitors to `/sign-in`.
-Everything else (requests, rooms, team, settings) is still client-side demo
-data.
+Data access on the front end is uniform: each feature has an `api.ts` (fetch
+through `shared/lib/api.ts`, every response Zod-parsed) and a store built on
+`shared/lib/remote-store.ts`, which loads on first subscribe, refreshes on the
+hotel's Server-Sent Events stream (`features/requests/live.ts`) and exposes the
+same hook names the components always used (`useRequests`, `useSettings`,
+`useRooms`, `useTeam`). Mutations call the API and replace the cached value
+with the server's response. `DeskBoot` in the desk layout waits for settings
+and team before rendering, so those two hooks are safe to read synchronously
+inside the console; guest screens receive settings as props from the plate
+bootstrap instead.
 
-The front desk is one console at `/desk` with five sections: Inbox, Rooms,
-Team, Analytics, Settings.
+Auth: register, login, logout, Google OAuth, forgot/reset password, optional
+two-factor (TOTP) that turns login into a ticket + code exchange. The
+session is an HttpOnly cookie set by the API; the app calls the API origin
+directly with `credentials: "include"` (`NEXT_PUBLIC_API_ORIGIN`, default
+`http://localhost:4000`). `features/auth/store.ts` keeps a localStorage copy
+of the public user for instant header rendering; `AuthGate` re-checks
+`/api/auth/me` on mount and sends anonymous visitors to `/sign-in`.
+
+Roles: registration creates the hotel's Manager; invited members get a staff
+role and see only the Inbox — the desk nav hides the other sections and
+`DeskBoot` bounces them back to `/desk`; the API refuses their writes with 403.
+The console UI is English only; the hotel's "team language" in Settings is the
+language guest messages are translated into and replies are written in.
+
+Guests reach `/r/[room]?t=<token>`; the token comes from the room's QR plate
+(rendered with the `qrcode` package) and is the only credential a guest has.
+Without a valid token the page shows a "scan the plate" message. The guest
+thread only ever contains `guest` and `staff` lines — the server strips system
+lines and notes before they leave.
+
+"Translation" is still a lookup table in `shared/i18n/dictionary.ts`, not a
+model call. Not built yet: photo upload, Telegram delivery (settings are
+stored, nothing is sent), the QR pack PDF, rate limiting.
+
+The front desk is one console at `/desk` with six sections: Inbox, Rooms,
+Team, Analytics, Preview, Settings. The bell in the header lists unanswered
+requests and opens one via `/desk?open=<id>`.
 
 `supabase/` and `shared/types/supabase.ts` still hold the schema of the
 previous product (a salon booking SaaS) and do not describe RoomCall. Do not

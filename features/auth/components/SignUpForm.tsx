@@ -4,7 +4,6 @@ import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { updateSettings, useSettings } from "@/features/requests";
 import { Button, showToast } from "@/shared/ui";
 
 import { register } from "../api";
@@ -22,7 +21,6 @@ import { GoogleButton } from "./GoogleButton";
 
 export function SignUpForm() {
   const router = useRouter();
-  const settings = useSettings();
   const [name, setName] = useState("");
   const [hotel, setHotel] = useState("");
   const [email, setEmail] = useState("");
@@ -54,7 +52,6 @@ export function SignUpForm() {
     }
 
     signIn(result.data);
-    updateSettings({ hotel: { ...settings.hotel, name: result.data.hotel } });
     showToast(`${result.data.hotel} is set up — start with Rooms`);
     router.push("/desk/rooms");
   }
