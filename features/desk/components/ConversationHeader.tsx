@@ -49,8 +49,8 @@ export function ConversationHeader({
   const isDone = request.status === "done";
 
   return (
-    <div className="relative border-b border-line px-7.5 pt-4.5 pb-4">
-      <div className="flex items-center gap-3">
+    <div className="relative border-b border-line px-4 pt-4 pb-3.5 md:px-7.5 md:pt-4.5 md:pb-4">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5">
         <span className="text-[24px] font-semibold tracking-[-0.03em]">
           Room {request.room}
         </span>
@@ -65,7 +65,7 @@ export function ConversationHeader({
         ) : null}
         <StatusPill status={request.status} />
 
-        <span className="ml-auto flex items-center gap-2">
+        <span className="flex w-full flex-wrap items-center gap-2 md:ml-auto md:w-auto">
           <label className="flex min-h-9.5 cursor-pointer items-center gap-2 rounded-full border border-line-strong pr-2 pl-2">
             <Avatar
               name={request.assignee === UNASSIGNED ? "" : request.assignee}
@@ -134,7 +134,7 @@ export function ConversationHeader({
             onClick={() => setIsMenuOpen(false)}
             className="fixed inset-0 z-40 cursor-default"
           />
-          <div className="animate-rise absolute top-14.5 right-7.5 z-50 w-75 rounded-tile border border-line-strong bg-surface p-1.5">
+          <div className="animate-rise absolute top-14.5 right-4 z-50 w-75 max-w-[calc(100vw-2rem)] rounded-tile border border-line-strong bg-surface p-1.5 md:right-7.5">
             <button
               type="button"
               onClick={() => {

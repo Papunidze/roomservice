@@ -62,9 +62,9 @@ export function SettingsScreen({
   };
 
   return (
-    <div className="flex h-[min(860px,calc(100dvh-8rem))] min-h-[560px] items-stretch">
-      <nav className="flex w-60 shrink-0 flex-col gap-0.5 border-r border-line px-4 py-6">
-        <div className="px-3 pb-4 text-[22px] font-semibold tracking-[-0.03em]">
+    <div className="flex flex-col md:h-[min(860px,calc(100dvh-8rem))] md:min-h-[560px] md:flex-row md:items-stretch">
+      <nav className="scrollbar-slim flex shrink-0 gap-1 overflow-x-auto border-b border-line px-4 py-3 md:w-60 md:flex-col md:gap-0.5 md:border-r md:border-b-0 md:py-6">
+        <div className="hidden px-3 pb-4 text-[22px] font-semibold tracking-[-0.03em] md:block">
           Settings
         </div>
         {SECTIONS.map((item) => (
@@ -73,7 +73,7 @@ export function SettingsScreen({
             type="button"
             onClick={() => setSection(item.key)}
             className={cn(
-              "block min-h-10.5 cursor-pointer rounded-full px-3.5 text-left text-[13.5px] font-medium transition-colors",
+              "block min-h-10.5 shrink-0 cursor-pointer rounded-full px-3.5 text-left text-[13.5px] font-medium whitespace-nowrap transition-colors",
               section === item.key
                 ? "bg-ink text-paper"
                 : "text-muted hover:bg-ink/4",
@@ -84,7 +84,7 @@ export function SettingsScreen({
         ))}
       </nav>
 
-      <div className="scrollbar-slim min-w-0 flex-1 overflow-y-auto px-8 pt-7 pb-10">
+      <div className="scrollbar-slim min-w-0 flex-1 px-4 pt-5 pb-10 md:overflow-y-auto md:px-8 md:pt-7">
         {section === "profile" ? (
           <HotelProfilePanel settings={draft} onChange={onChange} />
         ) : null}
@@ -104,7 +104,7 @@ export function SettingsScreen({
         {section === "billing" ? <BillingPanel /> : null}
 
         {isDirty ? (
-          <div className="sticky bottom-4 mx-auto mt-8 flex w-fit items-center gap-4 rounded-full bg-ink py-2 pr-2 pl-5 text-paper shadow-[0_12px_32px_rgba(17,17,17,0.28)]">
+          <div className="sticky bottom-4 mx-auto mt-8 flex w-fit max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-full bg-ink py-2 pr-2 pl-5 text-paper shadow-[0_12px_32px_rgba(17,17,17,0.28)]">
             <span className="animate-pulse-dot size-2 rounded-full bg-sand" />
             <span className="text-[13.5px] font-medium">
               {changedKeys.length === 1

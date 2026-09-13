@@ -13,12 +13,14 @@ import { ScreenHeader } from "./ScreenHeader";
 interface LateCheckoutScreenProps {
   phrases: Phrases;
   onBack: () => void;
+  isSending: boolean;
   onSubmit: (option: CheckoutOption) => void;
 }
 
 export function LateCheckoutScreen({
   phrases,
   onBack,
+  isSending,
   onSubmit,
 }: LateCheckoutScreenProps) {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export function LateCheckoutScreen({
 
       <PrimaryAction
         label={phrases.sendRequest}
-        enabled={Boolean(selected)}
+        enabled={!isSending && selected !== undefined}
         onClick={() => {
           if (selected) onSubmit(selected);
         }}

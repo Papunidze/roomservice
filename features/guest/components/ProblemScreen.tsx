@@ -17,6 +17,7 @@ import { ScreenHeader } from "./ScreenHeader";
 interface ProblemScreenProps {
   phrases: Phrases;
   settings: GuestSettings;
+  isSending: boolean;
   onBack: () => void;
   onSubmit: (input: {
     keys: ProblemKey[];
@@ -28,6 +29,7 @@ interface ProblemScreenProps {
 export function ProblemScreen({
   phrases,
   settings,
+  isSending,
   onBack,
   onSubmit,
 }: ProblemScreenProps) {
@@ -108,7 +110,7 @@ export function ProblemScreen({
 
       <PrimaryAction
         label={phrases.send}
-        enabled={keys.length > 0 || note.length > 0}
+        enabled={!isSending && (keys.length > 0 || note.length > 0)}
         onClick={() => onSubmit({ keys, note, photo })}
       />
 

@@ -45,24 +45,24 @@ export function DeskHeader() {
   const email = session?.email ?? "";
 
   return (
-    <div className="relative flex items-center gap-5 border-b border-line bg-surface px-6.5 py-3.5">
-      <div className="flex w-80 items-center gap-2.5">
-        <Hotel strokeWidth={1.4} className="size-[19px]" />
-        <span className="text-[15px] font-semibold tracking-[-0.02em]">
+    <div className="relative flex flex-wrap items-center gap-x-5 gap-y-3 border-b border-line bg-surface px-4 py-3 md:px-6.5 md:py-3.5">
+      <div className="flex min-w-0 items-center gap-2.5 lg:w-80">
+        <Hotel strokeWidth={1.4} className="size-[19px] shrink-0" />
+        <span className="truncate text-[15px] font-semibold tracking-[-0.02em]">
           {settings.hotel.name}
         </span>
-        <span className="text-[13px] text-faint">
+        <span className="hidden text-[13px] whitespace-nowrap text-faint md:inline">
           {agent} · {session?.role ?? "Front desk"}
         </span>
       </div>
 
-      <nav className="mx-auto flex gap-0.5 rounded-full bg-ink/5 p-[3px]">
+      <nav className="order-last flex w-full gap-0.5 overflow-x-auto rounded-full bg-ink/5 p-[3px] md:order-none md:mx-auto md:w-auto">
         {nav.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              "flex min-h-8.5 items-center rounded-full px-4 text-[13px] font-medium transition-colors",
+              "flex min-h-8.5 shrink-0 items-center rounded-full px-4 text-[13px] font-medium whitespace-nowrap transition-colors",
               pathname === item.href ? "bg-ink text-paper" : "text-muted",
             )}
           >
@@ -71,7 +71,7 @@ export function DeskHeader() {
         ))}
       </nav>
 
-      <div className="flex w-80 items-center justify-end gap-2.5">
+      <div className="ml-auto flex items-center justify-end gap-2.5 lg:w-80">
         <NotificationsMenu />
 
         <button
@@ -95,7 +95,7 @@ export function DeskHeader() {
             onClick={() => setIsMenuOpen(false)}
             className="fixed inset-0 z-40 cursor-default"
           />
-          <div className="animate-rise absolute top-14.5 right-6.5 z-50 w-68 rounded-tile border border-line-strong bg-surface p-2">
+          <div className="animate-rise absolute top-14 right-4 z-50 w-68 max-w-[calc(100vw-2rem)] rounded-tile border border-line-strong bg-surface p-2 md:top-14.5 md:right-6.5">
             <div className="border-b border-line-soft px-3 pt-2.5 pb-3">
               <div className="text-sm font-semibold">{agent}</div>
               <div className="mt-0.5 text-[12.5px] text-faint">

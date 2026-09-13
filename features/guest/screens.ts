@@ -1,5 +1,4 @@
 export const GUEST_SCREENS = [
-  "language",
   "home",
   "problem",
   "items",

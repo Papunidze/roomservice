@@ -15,6 +15,7 @@ interface ItemsScreenProps {
   lang: LangCode;
   settings: GuestSettings;
   onBack: () => void;
+  isSending: boolean;
   onSubmit: (picks: ItemPick[]) => void;
 }
 
@@ -26,6 +27,7 @@ export function ItemsScreen({
   lang,
   settings,
   onBack,
+  isSending,
   onSubmit,
 }: ItemsScreenProps) {
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -90,7 +92,7 @@ export function ItemsScreen({
         label={
           total > 0 ? `${phrases.sendRequest} · ${total}` : phrases.sendRequest
         }
-        enabled={total > 0}
+        enabled={!isSending && total > 0}
         onClick={() =>
           onSubmit(
             offered

@@ -1,13 +1,13 @@
 import { z } from "zod";
 
-import { env } from "../env.js";
+import { clientOrigin, env } from "../env.js";
 import { googleNotConfigured } from "../lib/http-error.js";
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
 
-const redirectUri = `${env.API_ORIGIN}/api/auth/google/callback`;
+const redirectUri = `${clientOrigin}/api/auth/google/callback`;
 
 const tokenSchema = z.object({ access_token: z.string() });
 

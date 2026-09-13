@@ -33,7 +33,7 @@ export function ThreadMessage({
   if (message.from === "note") {
     return (
       <div className="rounded-tile border border-sand bg-sand/55 px-5 py-4">
-        <div className="flex items-center gap-2.5 text-[12.5px]">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12.5px]">
           <Avatar name={message.by ?? ""} className="size-6.5 text-[10px]" />
           <span className="font-semibold">{message.by}</span>
           <span className="flex items-center gap-1 text-note-ink">

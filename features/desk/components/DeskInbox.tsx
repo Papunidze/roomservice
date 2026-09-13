@@ -100,7 +100,7 @@ export function DeskInbox({ initialRoom, initialOpenId }: DeskInboxProps) {
     .join(" · ");
 
   return (
-    <div className="scrollbar-slim h-[min(860px,calc(100dvh-8rem))] min-h-[560px] overflow-y-auto px-7 pt-6 pb-8">
+    <div className="scrollbar-slim px-4 pt-5 pb-8 md:h-[min(860px,calc(100dvh-8rem))] md:min-h-[560px] md:overflow-y-auto md:px-7 md:pt-6">
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <div>
           <div className="text-[22px] font-semibold tracking-[-0.03em]">
@@ -109,7 +109,7 @@ export function DeskInbox({ initialRoom, initialOpenId }: DeskInboxProps) {
           <div className="mt-0.5 text-[12.5px] text-faint">{summary}</div>
         </div>
         <span className="flex-1" />
-        <label className="flex min-h-10 w-64 items-center gap-2.5 rounded-full border border-line-strong bg-surface px-4">
+        <label className="flex min-h-10 w-full items-center gap-2.5 rounded-full border border-line-strong bg-surface px-4 sm:w-64">
           <Search strokeWidth={1.6} className="size-3.5 text-faint" />
           <input
             value={query}
@@ -178,7 +178,7 @@ export function DeskInbox({ initialRoom, initialOpenId }: DeskInboxProps) {
                 {cards.length}
               </span>
             </div>
-            <div className="grid grid-cols-3 gap-3.5">
+            <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
               {cards.map((request) => (
                 <RequestCard
                   key={request.id}

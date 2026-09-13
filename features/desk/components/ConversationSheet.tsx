@@ -13,14 +13,14 @@ export function ConversationSheet({
   ...panel
 }: ConversationSheetProps) {
   return (
-    <div className="absolute inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 flex justify-end md:absolute">
       <button
         type="button"
         aria-label="Close conversation"
         onClick={onClose}
         className="animate-fade absolute inset-0 cursor-default bg-ink/30"
       />
-      <div className="animate-rise relative flex h-full w-[880px] max-w-full flex-col border-l border-line bg-surface">
+      <div className="animate-rise relative flex h-full w-full flex-col bg-surface md:w-[880px] md:border-l md:border-line">
         <ConversationPanel {...panel} onClose={onClose} />
       </div>
     </div>

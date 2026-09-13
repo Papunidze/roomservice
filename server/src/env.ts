@@ -5,7 +5,6 @@ const schema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
-  API_ORIGIN: z.string().min(1).default("http://localhost:4000"),
   MONGODB_URI: z.string().min(1),
   MONGODB_DB: z.string().min(1).default("roomcall"),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),

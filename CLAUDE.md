@@ -50,9 +50,11 @@ bootstrap instead.
 
 Auth: register, login, logout, Google OAuth, forgot/reset password, optional
 two-factor (TOTP) that turns login into a ticket + code exchange. The
-session is an HttpOnly cookie set by the API; the app calls the API origin
-directly with `credentials: "include"` (`NEXT_PUBLIC_API_ORIGIN`, default
-`http://localhost:4000`). `features/auth/store.ts` keeps a localStorage copy
+session is an HttpOnly cookie set by the API. The browser only ever talks to
+the app's own origin: `next.config.ts` rewrites `/api/*` to the API
+(`API_ORIGIN`, default `http://localhost:4000`), so the cookie is first-party
+and survives Safari's third-party-cookie block on phones. The Google OAuth
+callback goes through the same proxy. `features/auth/store.ts` keeps a localStorage copy
 of the public user for instant header rendering; `AuthGate` re-checks
 `/api/auth/me` on mount and sends anonymous visitors to `/sign-in`.
 

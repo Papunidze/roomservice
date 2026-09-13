@@ -14,12 +14,14 @@ import { ScreenHeader } from "./ScreenHeader";
 interface RoomServiceScreenProps {
   phrases: Phrases;
   onBack: () => void;
+  isSending: boolean;
   onSubmit: (dish: Dish) => void;
 }
 
 export function RoomServiceScreen({
   phrases,
   onBack,
+  isSending,
   onSubmit,
 }: RoomServiceScreenProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -74,7 +76,7 @@ export function RoomServiceScreen({
 
       <PrimaryAction
         label={phrases.sendRequest}
-        enabled={Boolean(selected)}
+        enabled={!isSending && selected !== undefined}
         onClick={() => {
           if (selected) onSubmit(selected);
         }}

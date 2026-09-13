@@ -1,17 +1,11 @@
 import { z } from "zod";
 
-import {
-  API_ORIGIN,
-  apiGet,
-  apiPost,
-  noContent,
-  type ApiResult,
-} from "@/shared/lib/api";
+import { apiGet, apiPost, noContent, type ApiResult } from "@/shared/lib/api";
 
 import { sessionSchema } from "./schemas";
 import type { Session } from "./types";
 
-export const googleSignInUrl = `${API_ORIGIN}/api/auth/google`;
+export const googleSignInUrl = "/api/auth/google";
 
 const userSchema = z.object({ user: sessionSchema.unwrap() });
 

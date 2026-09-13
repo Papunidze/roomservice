@@ -7,14 +7,13 @@ import { formatWhen } from "@/shared/lib/time";
 import type { Room } from "../types";
 
 const GRID =
-  "grid grid-cols-[36px_84px_64px_130px_1fr_96px_150px_190px] items-center gap-3";
+  "grid min-w-[560px] grid-cols-[36px_84px_130px_1fr_190px] items-center gap-3";
 
 const ACTION =
   "min-h-7.5 cursor-pointer rounded-full border border-line px-2.5 text-[11.5px] text-faint transition-colors hover:border-ink/30 hover:text-ink";
 
 interface RoomsTableProps {
   rooms: Room[];
-  openCounts: Record<string, number>;
   selected: Set<string>;
   activeRoom: string | null;
   onToggle: (no: string) => void;
@@ -25,7 +24,6 @@ interface RoomsTableProps {
 
 export function RoomsTable({
   rooms,
-  openCounts,
   selected,
   activeRoom,
   onToggle,
@@ -36,7 +34,7 @@ export function RoomsTable({
   const allSelected = selected.size === rooms.length && rooms.length > 0;
 
   return (
-    <>
+    <div className="scrollbar-slim flex min-h-0 flex-1 flex-col overflow-x-auto">
       <div
         className={cn(
           GRID,
@@ -51,17 +49,13 @@ export function RoomsTable({
           className="size-4 cursor-pointer accent-sage"
         />
         <span>Room</span>
-        <span>Floor</span>
         <span>Plate</span>
         <span>Guest</span>
-        <span>Open</span>
-        <span>Last activity</span>
         <span />
       </div>
 
       <div className="scrollbar-slim min-h-0 flex-1 overflow-y-auto rounded-t-tile border border-b-0 border-line bg-surface">
         {rooms.map((room) => {
-          const open = openCounts[room.no] ?? 0;
           return (
             <div
               key={room.no}
@@ -85,7 +79,6 @@ export function RoomsTable({
               <span className="text-[17px] font-semibold tracking-[-0.03em]">
                 {room.no}
               </span>
-              <span className="text-[13px] text-muted">{room.floor}</span>
               <span
                 className={cn(
                   "inline-flex w-fit rounded-full px-2.5 py-0.5 text-[11.5px] font-medium",
@@ -114,17 +107,6 @@ export function RoomsTable({
                     : ""}
                 </span>
               </span>
-              <span
-                className={cn(
-                  "font-mono text-[13px]",
-                  open ? "font-semibold text-urgent" : "text-stone",
-                )}
-              >
-                {open || "—"}
-              </span>
-              <span className="font-mono text-[11.5px] text-faint">
-                {formatWhen(room.lastActivity)}
-              </span>
               <span className="flex justify-end gap-1">
                 <button
                   type="button"
@@ -147,6 +129,6 @@ export function RoomsTable({
           );
         })}
       </div>
-    </>
+    </div>
   );
 }

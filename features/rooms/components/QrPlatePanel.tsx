@@ -2,7 +2,6 @@
 
 import { Printer, X } from "lucide-react";
 
-import type { LangCode } from "@/shared/i18n";
 import { Button } from "@/shared/ui";
 
 import type { Room } from "../types";
@@ -11,7 +10,6 @@ import { PlateCard } from "./PlateCard";
 interface QrPlatePanelProps {
   room: Room;
   hotelName: string;
-  languages: LangCode[];
   onClose: () => void;
   onRegenerate: () => void;
   onPrint: () => void;
@@ -20,7 +18,6 @@ interface QrPlatePanelProps {
 export function QrPlatePanel({
   room,
   hotelName,
-  languages,
   onClose,
   onRegenerate,
   onPrint,
@@ -33,7 +30,7 @@ export function QrPlatePanel({
             Plate for room {room.no}
           </div>
           <div className="mt-0.5 text-[12.5px] text-faint">
-            {room.printed ? "Printed" : "Not printed yet"} · floor {room.floor}
+            {room.printed ? "Printed" : "Not printed yet"}
           </div>
         </div>
         <button
@@ -46,12 +43,7 @@ export function QrPlatePanel({
         </button>
       </div>
 
-      <PlateCard
-        room={room}
-        hotelName={hotelName}
-        languages={languages}
-        className="mx-auto mt-5.5"
-      />
+      <PlateCard room={room} hotelName={hotelName} className="mx-auto mt-5.5" />
 
       <Button onClick={onPrint} className="mt-4.5 w-full">
         <Printer strokeWidth={1.6} className="size-3.5" />
@@ -59,8 +51,7 @@ export function QrPlatePanel({
       </Button>
 
       <p className="mt-3.5 text-xs leading-relaxed text-faint">
-        A5, 300 dpi. It lists the guest languages enabled in Settings — keep
-        that list short and the plate stays readable.
+        One A5 page, QR code and room number only.
       </p>
 
       <div className="mt-6 rounded-tile border border-line bg-paper px-4.5 py-4">

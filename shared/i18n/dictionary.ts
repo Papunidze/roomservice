@@ -94,7 +94,6 @@ export interface Phrases {
   frontDesk: string;
   translated: string;
   justNow: string;
-  scanPlate: string;
   houseRules: string;
 }
 
@@ -175,7 +174,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "الاستقبال",
     translated: "مترجم إلى العربية",
     justNow: "الآن",
-    scanPlate: "امسح للتواصل مع الاستقبال",
     houseRules: "قواعد الإقامة",
   },
 
@@ -255,7 +253,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "Ресепшн",
     translated: "переведено на русский",
     justNow: "только что",
-    scanPlate: "Отсканируйте, чтобы связаться с ресепшн",
     houseRules: "Правила проживания",
   },
 
@@ -335,7 +332,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "Resepsiyon",
     translated: "Türkçeye çevrildi",
     justNow: "az önce",
-    scanPlate: "Resepsiyona ulaşmak için tarayın",
     houseRules: "Konaklama kuralları",
   },
 
@@ -416,7 +412,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "Front desk",
     translated: "translated for you",
     justNow: "just now",
-    scanPlate: "Scan to contact reception",
     houseRules: "House rules",
   },
 
@@ -496,7 +491,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "მიმღები",
     translated: "ითარგმნა ქართულად",
     justNow: "ახლახან",
-    scanPlate: "დაასკანერეთ მიმღებთან დასაკავშირებლად",
     houseRules: "სახლის წესები",
   },
   fa: {
@@ -576,7 +570,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "پذیرش",
     translated: "برای شما ترجمه شد",
     justNow: "هم‌اکنون",
-    scanPlate: "برای تماس با پذیرش اسکن کنید",
     houseRules: "قوانین اقامت",
   },
   he: {
@@ -654,7 +647,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "קבלה",
     translated: "תורגם עבורכם",
     justNow: "הרגע",
-    scanPlate: "סרקו כדי ליצור קשר עם הקבלה",
     houseRules: "כללי המלון",
   },
   uk: {
@@ -734,7 +726,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "Рецепція",
     translated: "перекладено для вас",
     justNow: "щойно",
-    scanPlate: "Скануйте, щоб зв’язатися з рецепцією",
     houseRules: "Правила проживання",
   },
   pl: {
@@ -813,7 +804,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "Recepcja",
     translated: "przetłumaczone dla Ciebie",
     justNow: "przed chwilą",
-    scanPlate: "Zeskanuj, aby skontaktować się z recepcją",
     houseRules: "Regulamin",
   },
   de: {
@@ -894,7 +884,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "Rezeption",
     translated: "für Sie übersetzt",
     justNow: "gerade eben",
-    scanPlate: "Scannen, um die Rezeption zu erreichen",
     houseRules: "Hausordnung",
   },
   fr: {
@@ -975,7 +964,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "Réception",
     translated: "traduit pour vous",
     justNow: "à l’instant",
-    scanPlate: "Scannez pour contacter la réception",
     houseRules: "Règlement intérieur",
   },
   pt: {
@@ -1053,7 +1041,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "Recepção",
     translated: "traduzido para você",
     justNow: "agora mesmo",
-    scanPlate: "Escaneie para falar com a recepção",
     houseRules: "Regras da casa",
   },
   hi: {
@@ -1132,7 +1119,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "रिसेप्शन",
     translated: "आपके लिए अनुवादित",
     justNow: "अभी",
-    scanPlate: "रिसेप्शन से संपर्क के लिए स्कैन करें",
     houseRules: "नियम",
   },
   zh: {
@@ -1210,7 +1196,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "前台",
     translated: "已为您翻译",
     justNow: "刚刚",
-    scanPlate: "扫码联系前台",
     houseRules: "住宿须知",
   },
   it: {
@@ -1290,7 +1275,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "Reception",
     translated: "tradotto per te",
     justNow: "proprio ora",
-    scanPlate: "Scansiona per contattare la reception",
     houseRules: "Regolamento",
   },
   es: {
@@ -1370,7 +1354,6 @@ export const DICTIONARY: Record<LangCode, Phrases> = {
     frontDesk: "Recepción",
     translated: "traducido para ti",
     justNow: "ahora mismo",
-    scanPlate: "Escanea para contactar con recepción",
     houseRules: "Normas del hotel",
   },
 };

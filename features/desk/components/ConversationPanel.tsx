@@ -87,7 +87,7 @@ export function ConversationPanel({
 
       <div
         ref={threadRef}
-        className="scrollbar-slim flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-7.5 py-5"
+        className="scrollbar-slim flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4 md:px-7.5 md:py-5"
       >
         {request.thread.map((message, index) => (
           <ThreadMessage

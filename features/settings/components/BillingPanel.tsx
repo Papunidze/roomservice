@@ -16,7 +16,8 @@ const BANK = [
   { label: "Reference", value: "Invoice number" },
 ];
 
-const GRID = "grid grid-cols-[130px_1fr_120px_110px_130px] items-center gap-3";
+const GRID =
+  "grid min-w-[680px] grid-cols-[130px_1fr_120px_110px_130px] items-center gap-3";
 
 function statusClass(status: string) {
   if (status === "Paid") return "bg-sage/10 text-sage-deep";
@@ -56,7 +57,7 @@ export function BillingPanel() {
         subtitle="Priced per room, billed monthly in GEL."
       />
 
-      <div className="mt-5.5 grid grid-cols-[1.3fr_1fr] gap-3.5">
+      <div className="mt-5.5 grid gap-3.5 md:grid-cols-[1.3fr_1fr]">
         <div className="rounded-card bg-ink px-6.5 py-6 text-paper">
           <div className="flex items-center gap-2.5">
             <span className="font-mono text-[10px] tracking-[0.14em] text-paper/50">
@@ -117,7 +118,7 @@ export function BillingPanel() {
         </div>
       </div>
 
-      <div className={cn(PANEL_CARD, "mt-3.5 overflow-hidden")}>
+      <div className={cn(PANEL_CARD, "scrollbar-slim mt-3.5 overflow-x-auto")}>
         <div
           className={cn(
             GRID,

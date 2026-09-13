@@ -7,7 +7,7 @@ import {
   type GuestSettings,
   type Request,
 } from "@/features/requests";
-import { API_ORIGIN, apiGet, apiPost } from "@/shared/lib/api";
+import { apiGet, apiPost } from "@/shared/lib/api";
 
 const plateSchema = z.object({
   room: z.string(),
@@ -61,7 +61,7 @@ export const sendGuestMessage = (
 ) => apiPost(`${base(token)}/requests/${id}/messages`, message, oneRequest);
 
 export function watchRoom(token: string, onChange: () => void) {
-  const source = new EventSource(`${API_ORIGIN}${base(token)}/events`);
+  const source = new EventSource(`${base(token)}/events`);
   source.onmessage = onChange;
   return () => source.close();
 }

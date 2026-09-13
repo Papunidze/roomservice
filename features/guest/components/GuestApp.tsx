@@ -58,12 +58,15 @@ export function GuestApp({ token, preview }: GuestAppProps) {
     plateState.status === "ready",
     isPreview,
   );
-  const [language, setLanguage] = useState<GuestLanguage | null>(null);
-  const [screen, setScreen] = useState<GuestScreen>("language");
+  const [picked, setPicked] = useState<GuestLanguage | null>(null);
+  const [screen, setScreen] = useState<GuestScreen>("home");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [isSending, setIsSending] = useState(false);
 
-  const active = requests.find((request) => request.id === activeId);
+  const active =
+    requests.find((request) => request.id === activeId) ??
+    requests.find((request) => request.status !== "done");
   const showTracking = useCallback(() => setScreen("track"), []);
 
   if (plateState.status === "loading")
@@ -79,11 +82,12 @@ export function GuestApp({ token, preview }: GuestAppProps) {
   const { plate } = plateState;
   const room = plate.room;
   const settings = plateSettings(plate);
+  const language =
+    picked ?? (plate.session ? guestLanguage(plate.session.lang) : null);
 
   const pickLanguage = (next: GuestLanguage) => {
-    setLanguage(next);
+    setPicked(next);
     setSheetOpen(false);
-    if (screen === "language") setScreen("home");
     if (!isPreview && plate.session?.lang !== next.base)
       void openGuestSession(token, next.base);
   };
@@ -109,6 +113,7 @@ export function GuestApp({ token, preview }: GuestAppProps) {
     ]);
 
   const submit = async (draft: Omit<Request, "id">) => {
+    if (isSending) return;
     if (isPreview) {
       previewSeq += 1;
       upsert({ ...draft, id: previewSeq });
@@ -116,7 +121,9 @@ export function GuestApp({ token, preview }: GuestAppProps) {
       setScreen("success");
       return;
     }
+    setIsSending(true);
     const result = await createGuestRequest(token, draft);
+    setIsSending(false);
     if (!result.ok) {
       showToast(result.message);
       return;
@@ -170,6 +177,7 @@ export function GuestApp({ token, preview }: GuestAppProps) {
         <ProblemScreen
           phrases={phrases}
           settings={settings}
+          isSending={isSending}
           onBack={goHome}
           onSubmit={(input: {
             keys: ProblemKey[];
@@ -184,6 +192,7 @@ export function GuestApp({ token, preview }: GuestAppProps) {
           phrases={phrases}
           lang={language.base}
           settings={settings}
+          isSending={isSending}
           onBack={goHome}
           onSubmit={(picks: ItemPick[]) => submit(itemsRequest(base, picks))}
         />
@@ -192,6 +201,7 @@ export function GuestApp({ token, preview }: GuestAppProps) {
       {screen === "service" ? (
         <RoomServiceScreen
           phrases={phrases}
+          isSending={isSending}
           onBack={goHome}
           onSubmit={(dish: Dish) => submit(serviceRequest(base, dish))}
         />
@@ -200,6 +210,7 @@ export function GuestApp({ token, preview }: GuestAppProps) {
       {screen === "checkout" ? (
         <LateCheckoutScreen
           phrases={phrases}
+          isSending={isSending}
           onBack={goHome}
           onSubmit={(option: CheckoutOption) =>
             submit(checkoutRequest(base, option))

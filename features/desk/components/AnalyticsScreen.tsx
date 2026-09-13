@@ -30,7 +30,7 @@ import { downloadRequestsCsv } from "../export-csv";
 const CARD = "rounded-tile border border-line bg-surface px-6 py-5.5";
 
 const REPEAT_GRID =
-  "grid grid-cols-[90px_1fr_120px_160px_120px] items-center gap-3";
+  "grid min-w-[640px] grid-cols-[90px_1fr_120px_160px_120px] items-center gap-3";
 
 export function AnalyticsScreen() {
   const requests = useRequests();
@@ -86,8 +86,8 @@ export function AnalyticsScreen() {
   ];
 
   return (
-    <div className="scrollbar-slim h-[min(860px,calc(100dvh-8rem))] min-h-[560px] overflow-y-auto px-7 pt-6 pb-8">
-      <div className="mb-4.5 flex items-center gap-3">
+    <div className="scrollbar-slim px-4 pt-5 pb-8 md:h-[min(860px,calc(100dvh-8rem))] md:min-h-[560px] md:overflow-y-auto md:px-7 md:pt-6">
+      <div className="mb-4.5 flex flex-wrap items-center gap-3">
         <div>
           <div className="text-[22px] font-semibold tracking-[-0.03em]">
             Analytics
@@ -118,7 +118,7 @@ export function AnalyticsScreen() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
         {tiles.map((tile) => (
           <div key={tile.label} className={cn(CARD, "px-5 py-4.5")}>
             <div className="font-mono text-[10px] tracking-[0.14em] text-ghost uppercase">
@@ -146,7 +146,7 @@ export function AnalyticsScreen() {
 
       {data ? (
         <>
-          <div className="mt-3.5 grid grid-cols-2 gap-3.5">
+          <div className="mt-3.5 grid gap-3.5 md:grid-cols-2">
             <div className={CARD}>
               <CategoryBars rows={data.categoryTotals} />
             </div>
@@ -155,7 +155,7 @@ export function AnalyticsScreen() {
             </div>
           </div>
 
-          <div className="mt-3.5 grid grid-cols-[1.6fr_1fr] gap-3.5">
+          <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.6fr_1fr]">
             <div className={CARD}>
               <TrendChart points={data.trend} label={label} />
             </div>
@@ -164,8 +164,8 @@ export function AnalyticsScreen() {
             </div>
           </div>
 
-          <div className={cn(CARD, "mt-3.5")}>
-            <div className="flex items-baseline justify-between">
+          <div className={cn(CARD, "scrollbar-slim mt-3.5 overflow-x-auto")}>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="text-base font-semibold tracking-[-0.02em]">
                 Rooms with repeat issues
               </span>

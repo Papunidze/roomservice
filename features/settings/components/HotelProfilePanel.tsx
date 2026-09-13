@@ -38,7 +38,10 @@ export function HotelProfilePanel({ settings, onChange }: SettingsPanelProps) {
       />
 
       <div
-        className={cn(PANEL_CARD, "mt-5.5 grid grid-cols-[96px_1fr] gap-5 p-6")}
+        className={cn(
+          PANEL_CARD,
+          "mt-5.5 grid gap-5 p-5 sm:grid-cols-[96px_1fr] sm:p-6",
+        )}
       >
         <button
           type="button"
@@ -50,17 +53,17 @@ export function HotelProfilePanel({ settings, onChange }: SettingsPanelProps) {
           <Hotel strokeWidth={1.4} className="size-6.5" />
         </button>
 
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid gap-3.5 sm:grid-cols-2">
           <TextField
             label="Hotel name"
             value={hotel.name}
-            className="col-span-2"
+            className="sm:col-span-2"
             onChange={(name) => setHotel({ name })}
           />
           <TextField
             label="Address"
             value={hotel.address}
-            className="col-span-2"
+            className="sm:col-span-2"
             onChange={(address) => setHotel({ address })}
           />
           <Field label="Timezone">
@@ -85,7 +88,7 @@ export function HotelProfilePanel({ settings, onChange }: SettingsPanelProps) {
         </div>
       </div>
 
-      <div className={cn(PANEL_CARD, "mt-3.5 p-6")}>
+      <div className={cn(PANEL_CARD, "mt-3.5 p-5 sm:p-6")}>
         <div className="text-[15px] font-semibold">Guest languages</div>
         <div className="mt-0.5 text-[12.5px] text-faint">
           Shown on the language screen after a scan. A guest whose language is
@@ -114,7 +117,7 @@ export function HotelProfilePanel({ settings, onChange }: SettingsPanelProps) {
                 >
                   {DICTIONARY[code].native}
                 </span>
-                <span className="text-[13px] text-faint">
+                <span className="hidden text-[13px] text-faint sm:inline">
                   {DICTIONARY[code].name}
                 </span>
                 <span className="flex-1" />
@@ -135,7 +138,7 @@ export function HotelProfilePanel({ settings, onChange }: SettingsPanelProps) {
           })}
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3 border-t border-line-soft pt-4">
+        <div className="mt-4 flex flex-col gap-3 border-t border-line-soft pt-4 sm:flex-row sm:items-center sm:justify-between">
           <span>
             <span className="block text-sm">Team language</span>
             <span className="mt-0.5 block text-[12.5px] text-faint">

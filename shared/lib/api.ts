@@ -1,9 +1,6 @@
 import type { ZodType } from "zod";
 import { z } from "zod";
 
-export const API_ORIGIN =
-  process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://localhost:4000";
-
 export interface ApiFailure {
   ok: false;
   code: string;
@@ -46,7 +43,7 @@ async function request<T>(
   schema: ZodType<T>,
   body?: unknown,
 ): Promise<ApiResult<T>> {
-  const response = await fetch(`${API_ORIGIN}${path}`, {
+  const response = await fetch(path, {
     method,
     credentials: "include",
     headers: body === undefined ? {} : { "Content-Type": "application/json" },

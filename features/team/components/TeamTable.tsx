@@ -10,7 +10,7 @@ import { patchMember, removeMember, resetMemberPassword } from "../store";
 import type { TeamMember } from "../types";
 
 const GRID =
-  "grid grid-cols-[1.4fr_140px_170px_110px_120px_220px] items-center gap-3";
+  "grid min-w-[880px] grid-cols-[1.4fr_140px_170px_110px_120px_220px] items-center gap-3";
 
 interface TeamTableProps {
   members: TeamMember[];
@@ -22,7 +22,7 @@ const ACTION =
 
 export function TeamTable({ members, currentEmail }: TeamTableProps) {
   return (
-    <div className="overflow-hidden rounded-tile border border-line bg-surface">
+    <div className="scrollbar-slim overflow-x-auto rounded-tile border border-line bg-surface">
       <div
         className={cn(
           GRID,

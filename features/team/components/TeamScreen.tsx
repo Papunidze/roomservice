@@ -23,8 +23,8 @@ export function TeamScreen() {
   ).length;
 
   return (
-    <div className="scrollbar-slim h-[min(860px,calc(100dvh-8rem))] min-h-[560px] overflow-y-auto px-7 pt-6 pb-8">
-      <div className="mb-4.5 flex items-center gap-3">
+    <div className="scrollbar-slim px-4 pt-5 pb-8 md:h-[min(860px,calc(100dvh-8rem))] md:min-h-[560px] md:overflow-y-auto md:px-7 md:pt-6">
+      <div className="mb-4.5 flex flex-wrap items-center gap-3">
         <div>
           <div className="text-[22px] font-semibold tracking-[-0.03em]">
             Team
@@ -43,7 +43,7 @@ export function TeamScreen() {
 
       <TeamTable members={team.members} currentEmail={currentEmail} />
 
-      <div className="mt-4.5 grid grid-cols-[1.3fr_1fr] gap-4.5">
+      <div className="mt-4.5 grid gap-4.5 lg:grid-cols-[1.3fr_1fr]">
         <RoutingCard team={team} />
         <EscalationCard team={team} />
       </div>

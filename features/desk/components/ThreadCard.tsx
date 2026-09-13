@@ -59,7 +59,7 @@ export function ThreadCard({
         fromGuest ? "border-sand bg-sand/25" : "border-line-strong bg-paper",
       )}
     >
-      <div className="flex items-center gap-2.5 text-[12.5px]">
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12.5px]">
         {fromGuest ? (
           <span className="grid size-6.5 place-items-center rounded-full bg-sand text-sand-ink">
             <User strokeWidth={1.8} className="size-3.5" />

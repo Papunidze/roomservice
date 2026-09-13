@@ -58,7 +58,7 @@ export function NotificationsMenu() {
             onClick={() => setIsOpen(false)}
             className="fixed inset-0 z-40 cursor-default"
           />
-          <div className="animate-rise absolute top-12 right-0 z-50 w-95 rounded-tile border border-line-strong bg-surface p-2">
+          <div className="animate-rise absolute top-12 right-0 z-50 w-95 max-w-[calc(100vw-2rem)] rounded-tile border border-line-strong bg-surface p-2">
             <div className="flex items-center justify-between px-3 pt-2 pb-2.5">
               <span className="text-sm font-semibold">Unanswered</span>
               <span className="text-[12px] text-faint">

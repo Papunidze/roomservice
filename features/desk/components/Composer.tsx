@@ -64,7 +64,7 @@ export function Composer({
   };
 
   return (
-    <div className="border-t border-line bg-surface px-7.5 pt-3.5 pb-5">
+    <div className="border-t border-line bg-surface px-4 pt-3.5 pb-4 md:px-7.5 md:pb-5">
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex gap-0.5 rounded-full bg-ink/5 p-[3px]">
           <button

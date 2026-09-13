@@ -1,7 +1,5 @@
 "use client";
 
-import { API_ORIGIN } from "@/shared/lib/api";
-
 export type HotelEvent =
   | { type: "request"; id: number; room: string }
   | { type: "room"; no: string }
@@ -14,9 +12,7 @@ const listeners = new Set<Listener>();
 let source: EventSource | null = null;
 
 function open() {
-  source = new EventSource(`${API_ORIGIN}/api/requests/events`, {
-    withCredentials: true,
-  });
+  source = new EventSource("/api/requests/events");
   source.onmessage = (message: MessageEvent<string>) => {
     const event = JSON.parse(message.data) as HotelEvent;
     for (const listener of listeners) listener(event);

@@ -1,7 +1,7 @@
 "use client";
 
 import { Hotel, Search, X } from "lucide-react";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import type { GuestSettings } from "@/features/requests";
 import {
@@ -13,9 +13,6 @@ import {
 } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 import { Flag } from "@/shared/ui";
-
-const GREET_INTERVAL_MS = 2600;
-const GREET_STRIP = 4;
 
 const neverChanges = () => () => {};
 
@@ -41,25 +38,9 @@ export function LanguageScreen({
   onPick,
 }: LanguageScreenProps) {
   const deviceTags = useDeviceLanguages();
-  const [greetIndex, setGreetIndex] = useState(0);
   const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    const timer = setInterval(
-      () => setGreetIndex((current) => current + 1),
-      GREET_INTERVAL_MS,
-    );
-    return () => clearInterval(timer);
-  }, []);
-
   const offered = LANGUAGES.filter((code) => settings.guestLanguages[code]);
-  const spotlight = offered[greetIndex % offered.length] ?? "en";
-  const strip = Array.from(
-    { length: Math.min(GREET_STRIP, offered.length - 1) },
-    (_, step) =>
-      DICTIONARY[offered[(greetIndex + step + 1) % offered.length] ?? "en"]
-        .greet,
-  ).join("   ·   ");
 
   const suggested =
     deviceTags.find((tag): tag is LangCode =>
@@ -83,18 +64,9 @@ export function LanguageScreen({
         </span>
       </div>
 
-      <div className="mt-9 flex min-h-[46px] items-end">
-        <span
-          dir={DICTIONARY[spotlight].dir}
-          className={cn(
-            "animate-greet w-full text-[34px] leading-[1.15] font-semibold tracking-[-0.03em]",
-            scriptFont(spotlight),
-          )}
-        >
-          {DICTIONARY[spotlight].greet}
-        </span>
-      </div>
-      <div className="mt-2.5 truncate text-[13.5px] text-ghost">{strip}</div>
+      <h1 className="mt-9 text-[34px] leading-[1.15] font-semibold tracking-[-0.03em]">
+        Choose your language
+      </h1>
 
       <div className="mt-7 flex min-h-12 items-center gap-2.5 rounded-full border border-line-strong bg-surface px-4.5">
         <Search strokeWidth={1.6} className="size-4 shrink-0 text-faint" />

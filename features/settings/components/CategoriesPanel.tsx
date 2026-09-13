@@ -28,9 +28,15 @@ const URGENCIES: { value: Urgency; label: string }[] = [
 ];
 
 const SELECT =
-  "min-h-9 w-fit cursor-pointer rounded-full border border-line-strong bg-transparent px-3 text-[12.5px] font-medium outline-none";
+  "min-h-9 w-full cursor-pointer rounded-full border border-line-strong bg-transparent px-3 text-[12.5px] font-medium outline-none md:w-fit";
 
 const GRID = "grid grid-cols-[1fr_150px_160px_60px] items-center gap-3";
+
+const ROW =
+  "grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 py-4 md:min-h-15 md:grid-cols-[1fr_150px_160px_60px] md:py-0";
+
+const MOBILE_LABEL =
+  "mb-1 block text-[11px] tracking-[0.08em] text-faint uppercase md:sr-only";
 
 const CATALOGUE = new Set<string>(ITEM_KEYS);
 
@@ -76,7 +82,7 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
         <div
           className={cn(
             GRID,
-            "border-b border-line-soft px-5.5 py-3 font-mono text-[10px] tracking-[0.12em] text-ghost uppercase",
+            "hidden border-b border-line-soft px-5.5 py-3 font-mono text-[10px] tracking-[0.12em] text-ghost uppercase md:grid",
           )}
         >
           <span>Category</span>
@@ -92,8 +98,8 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
             <div
               key={key}
               className={cn(
-                GRID,
-                "min-h-15 border-b border-line-soft px-5.5 transition-opacity last:border-b-0",
+                ROW,
+                "border-b border-line-soft px-4 transition-opacity last:border-b-0 md:px-5.5",
                 setting.enabled ? "opacity-100" : "opacity-55",
               )}
             >
@@ -106,11 +112,10 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
                 </span>
               </span>
 
-              <label>
-                <span className="sr-only">
-                  Urgency for {CATEGORY_LABEL[key]}
-                </span>
+              <label className="order-3 md:order-2">
+                <span className={MOBILE_LABEL}>Urgency</span>
                 <select
+                  aria-label={`Urgency for ${CATEGORY_LABEL[key]}`}
                   value={setting.urgency}
                   onChange={(event) =>
                     setCategory(key, { urgency: event.target.value as Urgency })
@@ -125,9 +130,10 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
                 </select>
               </label>
 
-              <label>
-                <span className="sr-only">Role for {CATEGORY_LABEL[key]}</span>
+              <label className="order-4 md:order-3">
+                <span className={MOBILE_LABEL}>Routed to</span>
                 <select
+                  aria-label={`Role for ${CATEGORY_LABEL[key]}`}
                   value={setting.role}
                   onChange={(event) =>
                     setCategory(key, { role: event.target.value as StaffRole })
@@ -142,17 +148,21 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
                 </select>
               </label>
 
-              <Switch
-                checked={setting.enabled}
-                label={`${CATEGORY_LABEL[key]} shown to guests`}
-                onChange={() => setCategory(key, { enabled: !setting.enabled })}
-              />
+              <span className="order-2 justify-self-end md:order-4">
+                <Switch
+                  checked={setting.enabled}
+                  label={`${CATEGORY_LABEL[key]} shown to guests`}
+                  onChange={() =>
+                    setCategory(key, { enabled: !setting.enabled })
+                  }
+                />
+              </span>
             </div>
           );
         })}
       </div>
 
-      <div className="mt-6.5 flex items-end gap-3">
+      <div className="mt-6.5 flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex-1">
           <div className="text-[15px] font-semibold">Item request menu</div>
           <div className="mt-0.5 text-[12.5px] text-faint">
@@ -160,7 +170,7 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
             here are shown as typed — only the catalogue items are translated.
           </div>
         </div>
-        <div className="flex min-h-10 items-center gap-2 rounded-full border border-line-strong bg-surface pr-1.5 pl-3.5">
+        <div className="flex min-h-10 items-center gap-2 self-start rounded-full border border-line-strong bg-surface pr-1.5 pl-3.5">
           <input
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
@@ -183,7 +193,7 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
         </div>
       </div>
 
-      <div className="mt-3.5 grid grid-cols-3 gap-2.5">
+      <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
         {settings.items.map((item) => (
           <div
             key={item.key}

@@ -36,8 +36,8 @@ export function SecurityPanel() {
         subtitle="Your own sign-in, and what each role on your team can reach."
       />
 
-      <div className={cn(PANEL_CARD, "mt-5.5 px-6 py-5")}>
-        <div className="flex items-center gap-3.5">
+      <div className={cn(PANEL_CARD, "mt-5.5 px-5 py-5 sm:px-6")}>
+        <div className="flex flex-wrap items-center gap-3.5">
           <Avatar name={session?.name ?? ""} className="size-10 text-[13px]" />
           <span className="flex-1">
             <span className="block text-sm font-medium">{session?.name}</span>
@@ -58,13 +58,13 @@ export function SecurityPanel() {
 
       <TwoFactorCard className={cn(PANEL_CARD, "mt-4")} />
 
-      <div className={cn(PANEL_CARD, "mt-4 px-6 py-5")}>
+      <div className={cn(PANEL_CARD, "mt-4 px-5 py-5 sm:px-6")}>
         <div className="text-[15px] font-semibold">Who can do what</div>
         <div className="mt-3 flex flex-col">
           {ROLE_RULES.map((rule) => (
             <div
               key={rule.role}
-              className="grid min-h-13 grid-cols-[220px_1fr] items-center gap-3 border-t border-line-soft text-[13.5px]"
+              className="grid min-h-13 items-center gap-1 border-t border-line-soft py-2.5 text-[13.5px] sm:grid-cols-[220px_1fr] sm:gap-3 sm:py-0"
             >
               <span className="font-medium">{rule.role}</span>
               <span className="text-muted">{rule.access}</span>

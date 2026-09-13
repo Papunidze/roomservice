@@ -28,11 +28,9 @@ for (const port of [3000, 4000]) {
 }
 
 const app = `http://${lan.address}:3000`;
-const api = `http://${lan.address}:4000`;
 
 console.log(`
   App   ${app}
-  API   ${api}
 
   Open the App URL on your phone (same Wi-Fi). QR plates printed while this
   runs point at that address too. Press Ctrl+C to stop both servers.
@@ -47,11 +45,9 @@ const run = (args, cwd, env) =>
 
 const server = run(["dev"], "server", {
   CLIENT_ORIGIN: `${app},http://localhost:3000`,
-  API_ORIGIN: api,
 });
 
 const web = run(["exec", "next", "dev", "-H", "0.0.0.0"], ".", {
-  NEXT_PUBLIC_API_ORIGIN: api,
   LAN_HOST: lan.address,
 });
 

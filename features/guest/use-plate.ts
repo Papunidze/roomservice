@@ -6,6 +6,8 @@ import type { Request } from "@/features/requests";
 
 import { fetchPlate, fetchRoomRequests, watchRoom, type Plate } from "./api";
 
+const POLL_MS = 30_000;
+
 type PlateState =
   | { status: "loading" }
   | { status: "invalid" }
@@ -52,7 +54,12 @@ export function useRoomRequests(
   useEffect(() => {
     if (!isReady || isPreview) return;
     reload();
-    return watchRoom(token, reload);
+    const unwatch = watchRoom(token, reload);
+    const poll = setInterval(reload, POLL_MS);
+    return () => {
+      unwatch();
+      clearInterval(poll);
+    };
   }, [token, isReady, isPreview, reload]);
 
   return { requests, setRequests };

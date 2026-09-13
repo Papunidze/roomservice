@@ -22,9 +22,9 @@ export function GuestInfoPanel({ settings, onChange }: SettingsPanelProps) {
         subtitle="Written once in English and shown to every guest exactly as written."
       />
 
-      <div className="mt-5.5 grid grid-cols-[1fr_280px] gap-3.5">
-        <div className={cn(PANEL_CARD, "flex flex-col gap-4 p-6")}>
-          <div className="grid grid-cols-2 gap-3.5">
+      <div className="mt-5.5 grid gap-3.5 lg:grid-cols-[1fr_280px]">
+        <div className={cn(PANEL_CARD, "flex flex-col gap-4 p-5 sm:p-6")}>
+          <div className="grid gap-3.5 sm:grid-cols-2">
             <TextField
               label="WiFi network"
               value={info.wifiName}

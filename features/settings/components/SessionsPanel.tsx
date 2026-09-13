@@ -28,9 +28,9 @@ export function SessionsPanel({ settings, onChange }: SettingsPanelProps) {
         subtitle="A session starts at the first scan and ties the room’s tickets to one guest."
       />
 
-      <div className={cn(PANEL_CARD, "mt-5.5 px-6 py-1.5")}>
-        <div className="flex min-h-17 items-center gap-3.5">
-          <span className="flex-1">
+      <div className={cn(PANEL_CARD, "mt-5.5 px-5 py-1.5 sm:px-6")}>
+        <div className="flex min-h-17 flex-wrap items-center gap-3.5 py-3">
+          <span className="min-w-48 flex-1">
             <span className="block text-sm">Auto-close after inactivity</span>
             <span className="mt-0.5 block text-[12.5px] text-faint">
               The next scan starts a fresh session with a new guest.
@@ -45,8 +45,8 @@ export function SessionsPanel({ settings, onChange }: SettingsPanelProps) {
           <span className="text-[13px] text-muted">hours</span>
         </div>
 
-        <div className="flex min-h-17 items-center gap-3.5 border-t border-line-soft">
-          <span className="flex-1">
+        <div className="flex min-h-17 items-center gap-3.5 border-t border-line-soft py-3">
+          <span className="min-w-0 flex-1">
             <span className="block text-sm">
               Require “Close room” on checkout
             </span>

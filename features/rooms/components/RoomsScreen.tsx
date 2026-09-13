@@ -3,8 +3,7 @@
 import { Plus, Printer, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
-import { useRequests, useSettings } from "@/features/requests";
-import { LANGUAGES } from "@/shared/i18n";
+import { useSettings } from "@/features/requests";
 import { askConfirm, Button, showToast } from "@/shared/ui";
 
 import { openPlatePrint } from "../print";
@@ -23,22 +22,12 @@ import { RoomsTable } from "./RoomsTable";
 
 export function RoomsScreen() {
   const rooms = useRooms();
-  const requests = useRequests();
   const settings = useSettings();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [plateRoom, setPlateRoom] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
-  const openCounts: Record<string, number> = {};
-  for (const request of requests) {
-    if (request.archived || request.status === "done") continue;
-    openCounts[request.room] = (openCounts[request.room] ?? 0) + 1;
-  }
-
   const active = rooms.find((room) => room.no === plateRoom);
-  const plateLanguages = LANGUAGES.filter(
-    (code) => settings.guestLanguages[code],
-  );
   const withGuest = rooms.filter((room) => room.session).length;
   const unprinted = rooms.filter((room) => !room.printed).length;
 
@@ -96,9 +85,9 @@ export function RoomsScreen() {
   };
 
   return (
-    <div className="flex h-[min(860px,calc(100dvh-8rem))] min-h-[560px] items-stretch">
-      <div className="flex min-w-0 flex-1 flex-col px-7 pt-6">
-        <div className="mb-4.5 flex items-center gap-3">
+    <div className="flex flex-col md:h-[min(860px,calc(100dvh-8rem))] md:min-h-[560px] md:flex-row md:items-stretch">
+      <div className="flex min-w-0 flex-1 flex-col px-4 pt-5 md:px-7 md:pt-6">
+        <div className="mb-4.5 flex flex-wrap items-center gap-3">
           <div>
             <div className="text-[22px] font-semibold tracking-[-0.03em]">
               Rooms
@@ -126,7 +115,7 @@ export function RoomsScreen() {
         </div>
 
         {selected.size > 0 ? (
-          <div className="mb-3.5 flex items-center gap-3 rounded-full border border-sage/40 bg-sage/10 py-2 pr-2 pl-4.5 text-[13px]">
+          <div className="mb-3.5 flex flex-wrap items-center gap-3 rounded-full border border-sage/40 bg-sage/10 py-2 pr-2 pl-4.5 text-[13px]">
             <span className="font-medium text-sage-deep">
               {selected.size} room{selected.size === 1 ? "" : "s"} selected
             </span>
@@ -159,7 +148,6 @@ export function RoomsScreen() {
 
         <RoomsTable
           rooms={rooms}
-          openCounts={openCounts}
           selected={selected}
           activeRoom={plateRoom}
           onToggle={toggle}
@@ -173,7 +161,6 @@ export function RoomsScreen() {
         <QrPlatePanel
           room={active}
           hotelName={settings.hotel.name}
-          languages={plateLanguages}
           onClose={() => setPlateRoom(null)}
           onRegenerate={() => regenerate(active.no)}
           onPrint={() => printPlates([active.no])}
