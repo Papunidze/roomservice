@@ -166,6 +166,7 @@ export function GuestApp({ token, preview }: GuestAppProps) {
         <HomeScreen
           room={room}
           phrases={phrases}
+          settings={settings}
           languageLabel={language.native}
           active={active}
           onOpenLanguage={() => setSheetOpen(true)}

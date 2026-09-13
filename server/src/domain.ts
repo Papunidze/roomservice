@@ -43,6 +43,9 @@ export const CONFIGURABLE_CATEGORIES = [
   "noise",
   "cleaning",
   "items",
+  "service",
+  "checkout",
+  "info",
   "other",
 ] as const;
 
@@ -96,6 +99,9 @@ export const CATEGORY_DEFAULT: Record<
   noise: { urgency: "medium", role: "Front desk" },
   cleaning: { urgency: "medium", role: "Housekeeping" },
   items: { urgency: "low", role: "Housekeeping" },
+  service: { urgency: "medium", role: "Front desk" },
+  checkout: { urgency: "medium", role: "Front desk" },
+  info: { urgency: "low", role: "Front desk" },
   other: { urgency: "medium", role: "Front desk" },
 };
 

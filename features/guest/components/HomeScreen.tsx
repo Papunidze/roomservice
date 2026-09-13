@@ -5,6 +5,7 @@ import { ArrowRight, Globe, Hotel, TriangleAlert } from "lucide-react";
 import {
   CATEGORY_ICON,
   CATEGORY_LABEL,
+  type GuestSettings,
   type Request,
   type Status,
 } from "@/features/requests";
@@ -21,6 +22,7 @@ import type { GuestScreen } from "../screens";
 interface HomeScreenProps {
   room: string;
   phrases: Phrases;
+  settings: GuestSettings;
   languageLabel: string;
   active: Request | undefined;
   onOpenLanguage: () => void;
@@ -30,6 +32,7 @@ interface HomeScreenProps {
 export function HomeScreen({
   room,
   phrases,
+  settings,
   languageLabel,
   active,
   onOpenLanguage,
@@ -61,6 +64,9 @@ export function HomeScreen({
       sub: phrases.infoS,
     },
   ] as const;
+  const offered = cards.filter(
+    (card) => settings.categories[card.category].enabled,
+  );
 
   return (
     <div className="animate-rise px-5.5 pt-3.5 pb-9">
@@ -111,7 +117,7 @@ export function HomeScreen({
       </button>
 
       <div className="mt-2.5 grid grid-cols-2 gap-2.5">
-        {cards.map((card) => {
+        {offered.map((card) => {
           const Icon = CATEGORY_ICON[card.category];
           return (
             <button

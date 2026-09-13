@@ -14,6 +14,18 @@ import type { HotelDoc, Settings, TeamConfig } from "./types.js";
 
 const capitalise = (key: string) => key.charAt(0).toUpperCase() + key.slice(1);
 
+function defaultCategories() {
+  return Object.fromEntries(
+    CONFIGURABLE_CATEGORIES.map((key) => [
+      key,
+      { enabled: true, ...CATEGORY_DEFAULT[key] },
+    ]),
+  ) as Record<
+    ConfigurableCategory,
+    Settings["categories"][ConfigurableCategory]
+  >;
+}
+
 export function defaultSettings(name: string): Settings {
   return {
     hotel: {
@@ -36,15 +48,7 @@ export function defaultSettings(name: string): Settings {
       reception: "24/7",
       rules: "",
     },
-    categories: Object.fromEntries(
-      CONFIGURABLE_CATEGORIES.map((key) => [
-        key,
-        { enabled: true, ...CATEGORY_DEFAULT[key] },
-      ]),
-    ) as Record<
-      ConfigurableCategory,
-      Settings["categories"][ConfigurableCategory]
-    >,
+    categories: defaultCategories(),
     items: ITEM_KEYS.map((key) => ({
       key,
       label: capitalise(key),
@@ -86,6 +90,10 @@ export async function createHotel(name: string) {
 export async function getHotel(hotelId: ObjectId) {
   const hotel = await hotels().findOne({ _id: hotelId });
   if (!hotel) throw new Error(`Hotel ${hotelId.toHexString()} is missing`);
+  hotel.settings.categories = {
+    ...defaultCategories(),
+    ...hotel.settings.categories,
+  };
   return hotel;
 }
 

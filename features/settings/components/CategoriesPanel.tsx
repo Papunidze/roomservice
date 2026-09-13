@@ -75,7 +75,7 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
     <div className="animate-rise max-w-215">
       <PanelHeading
         title="Categories & quick chips"
-        subtitle="What guests can tap on “Report a problem”, and where each one is routed."
+        subtitle="What guests see on their home screen and under “Report a problem”, and where each request is routed."
       />
 
       <div className={cn(PANEL_CARD, "mt-5.5 overflow-hidden")}>
@@ -112,7 +112,14 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
                 </span>
               </span>
 
-              <label className="order-3 md:order-2">
+              {key === "info" ? (
+                <span className="order-3 col-span-2 text-[12.5px] text-faint md:order-2 md:col-span-2">
+                  Read-only page, nothing is sent
+                </span>
+              ) : null}
+              <label
+                className={cn("order-3 md:order-2", key === "info" && "hidden")}
+              >
                 <span className={MOBILE_LABEL}>Urgency</span>
                 <select
                   aria-label={`Urgency for ${CATEGORY_LABEL[key]}`}
@@ -130,7 +137,9 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
                 </select>
               </label>
 
-              <label className="order-4 md:order-3">
+              <label
+                className={cn("order-4 md:order-3", key === "info" && "hidden")}
+              >
                 <span className={MOBILE_LABEL}>Routed to</span>
                 <select
                   aria-label={`Role for ${CATEGORY_LABEL[key]}`}
