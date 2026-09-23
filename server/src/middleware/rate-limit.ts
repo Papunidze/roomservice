@@ -1,4 +1,4 @@
-import { rateLimit } from "express-rate-limit";
+import { ipKeyGenerator, rateLimit } from "express-rate-limit";
 
 const MINUTE_MS = 60_000;
 
@@ -23,6 +23,6 @@ export const guestWriteLimiter = rateLimit({
   standardHeaders: "draft-8",
   legacyHeaders: false,
   keyGenerator: (req) =>
-    `${req.ip ?? "unknown"}:${String(req.params.token ?? "")}`,
+    `${ipKeyGenerator(req.ip ?? "unknown")}:${String(req.params.token ?? "")}`,
   message,
 });
