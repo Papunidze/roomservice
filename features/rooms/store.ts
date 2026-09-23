@@ -53,6 +53,9 @@ export const markPrinted = (numbers: string[]) =>
 export const setPrinted = (no: string, printed: boolean) =>
   settle(patchRoomApi(no, { printed }), ({ room }) => replaceRoom(room));
 
+export const editRoom = (no: string, patch: { name: string; floor: number }) =>
+  settle(patchRoomApi(no, patch), ({ room }) => replaceRoom(room));
+
 export const regenerateRoom = (no: string) =>
   settle(regenerateRoomToken(no), ({ room }) => replaceRoom(room));
 

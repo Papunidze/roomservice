@@ -4,6 +4,7 @@ import { Send } from "lucide-react";
 import { useState } from "react";
 
 import { STAFF_ROLES, type StaffRole } from "@/features/requests";
+import { DICTIONARY, LANGUAGES, type LangCode } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 import {
   Button,
@@ -16,16 +17,22 @@ import {
 
 import { inviteMember } from "../store";
 
-export function InviteModal({ onClose }: { onClose: () => void }) {
+interface InviteModalProps {
+  defaultLang: LangCode;
+  onClose: () => void;
+}
+
+export function InviteModal({ defaultLang, onClose }: InviteModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<StaffRole>("Housekeeping");
+  const [lang, setLang] = useState<LangCode>(defaultLang);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSending, setIsSending] = useState(false);
 
   async function send() {
     setIsSending(true);
-    const result = await inviteMember({ name, email, role });
+    const result = await inviteMember({ name, email, role, lang });
     setIsSending(false);
 
     if (!result.ok) {
@@ -85,6 +92,20 @@ export function InviteModal({ onClose }: { onClose: () => void }) {
           </Chip>
         ))}
       </div>
+
+      <Field label="Reads guest messages in" className="mt-4">
+        <select
+          value={lang}
+          onChange={(event) => setLang(event.target.value as LangCode)}
+          className={cn(FIELD_CONTROL, "cursor-pointer")}
+        >
+          {LANGUAGES.map((code) => (
+            <option key={code} value={code}>
+              {DICTIONARY[code].name}
+            </option>
+          ))}
+        </select>
+      </Field>
 
       <div className="mt-5.5 flex justify-end gap-2">
         <Button variant="ghost" onClick={onClose}>

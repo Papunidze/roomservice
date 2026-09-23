@@ -7,25 +7,29 @@ export {
   type Analytics,
   type AnalyticsRange,
 } from "./analytics";
-export { addRequestNote, patchRequest, replyToRequest } from "./api";
+export {
+  addRequestNote,
+  fetchHistory,
+  patchRequest,
+  replyToRequest,
+} from "./api";
+export {
+  PLAN_LABEL,
+  PLANS,
+  useBilling,
+  type Billing,
+  type Plan,
+} from "./billing";
 export {
   CATEGORY_DEFAULT,
   CATEGORY_ICON,
   CATEGORY_LABEL,
-  CHECKOUT_OPTIONS,
   CONFIGURABLE_CATEGORIES,
-  DISHES,
-  FRONT_DESK_AGENT,
-  FRONT_DESK_LANGUAGE,
-  HOTEL,
   isItemKey,
   ITEM_KEYS,
   PROBLEM_KEYS,
-  TIMEZONES,
   URGENT_PROBLEMS,
-  type CheckoutOption,
   type ConfigurableCategory,
-  type Dish,
   type ItemKey,
   type ProblemKey,
 } from "./catalog";
@@ -38,13 +42,20 @@ export {
 export { watchHotel, type HotelEvent } from "./live";
 export { langCodeSchema, requestSchema, settingsSchema } from "./schemas";
 export {
+  dishName,
+  fillIn,
   itemLabel,
   type CategorySetting,
+  type CheckoutOption,
+  type Dish,
   type GuestInfo,
   type GuestSettings,
   type HotelProfile,
   type MenuItem,
+  type NotificationSettings,
+  type ServiceSettings,
   type Settings,
+  type Translations,
 } from "./settings";
 export {
   updateSettings,
@@ -53,7 +64,9 @@ export {
 } from "./settings-store";
 export { refreshRequests, replaceRequest, useRequests } from "./store";
 export {
+  ADMIN_ROLES,
   CATEGORIES,
+  isAdminRole,
   isGuestVisible,
   MESSAGE_KINDS,
   STAFF_ROLES,
@@ -62,6 +75,7 @@ export {
   type GuestLanguage,
   type Message,
   type MessageKind,
+  type Rating,
   type Request,
   type StaffRole,
   type Status,

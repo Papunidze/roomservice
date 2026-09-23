@@ -16,7 +16,6 @@ export const memberPatchSchema = z
     name: z.string().trim().min(2).max(80),
     role: roleSchema,
     lang: langCodeSchema,
-    telegram: z.boolean(),
     onShift: z.boolean(),
   })
   .partial();

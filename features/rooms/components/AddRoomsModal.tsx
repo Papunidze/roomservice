@@ -13,6 +13,8 @@ const MODES = [
   { key: "range", label: "Range" },
 ] as const;
 
+const ROOM_NUMBER = /^[\p{L}\p{N}-]{1,10}$/u;
+
 interface AddRoomsModalProps {
   rooms: Room[];
   onClose: () => void;
@@ -27,18 +29,36 @@ export function AddRoomsModal({
   const [mode, setMode] = useState<"single" | "range">("range");
   const [fromValue, setFromValue] = useState("601");
   const [toValue, setToValue] = useState("610");
+  const [single, setSingle] = useState("");
 
   const from = Number(fromValue);
-  const to = mode === "range" ? Number(toValue) : from;
-  const valid = from > 0 && to >= from && to - from < 200;
-  const added = valid ? nextRoomNumbers(from, to, rooms) : [];
-  const skipped = valid ? to - from + 1 - added.length : 0;
+  const to = Number(toValue);
+  const isRangeValid = from > 0 && to >= from && to - from < 200;
+  const taken = new Set(rooms.map((room) => room.no));
+  const singleNo = single.trim();
+  const isSingleValid = ROOM_NUMBER.test(singleNo) && !taken.has(singleNo);
 
-  const preview = !valid
-    ? "Enter a room number, or a range like 601 – 610."
-    : `${added.length} new room${added.length === 1 ? "" : "s"}${
-        skipped ? ` · ${skipped} already exist and will be skipped` : ""
-      } · floor ${Math.floor(from / 100)}`;
+  const added =
+    mode === "range"
+      ? isRangeValid
+        ? nextRoomNumbers(from, to, rooms)
+        : []
+      : isSingleValid
+        ? [singleNo]
+        : [];
+  const skipped =
+    mode === "range" && isRangeValid ? to - from + 1 - added.length : 0;
+
+  const preview =
+    mode === "single"
+      ? taken.has(singleNo)
+        ? `Room ${singleNo} already exists.`
+        : "Digits, letters and dashes, like 101, 12A or P-3."
+      : !isRangeValid
+        ? "Enter a range like 601 – 610."
+        : `${added.length} new room${added.length === 1 ? "" : "s"}${
+            skipped ? ` · ${skipped} already exist and will be skipped` : ""
+          }`;
 
   return (
     <Modal
@@ -63,21 +83,18 @@ export function AddRoomsModal({
       </div>
 
       <div className="mt-4 flex items-end gap-2.5">
-        <Field
-          label={mode === "range" ? "From" : "Room number"}
-          className="flex-1"
-        >
-          <input
-            inputMode="numeric"
-            value={fromValue}
-            onChange={(event) =>
-              setFromValue(event.target.value.replace(/\D/g, ""))
-            }
-            className={cn(FIELD_CONTROL, "font-mono")}
-          />
-        </Field>
         {mode === "range" ? (
           <>
+            <Field label="From" className="flex-1">
+              <input
+                inputMode="numeric"
+                value={fromValue}
+                onChange={(event) =>
+                  setFromValue(event.target.value.replace(/\D/g, ""))
+                }
+                className={cn(FIELD_CONTROL, "font-mono")}
+              />
+            </Field>
             <span className="pb-3 text-ghost">–</span>
             <Field label="To" className="flex-1">
               <input
@@ -90,7 +107,16 @@ export function AddRoomsModal({
               />
             </Field>
           </>
-        ) : null}
+        ) : (
+          <Field label="Room number" className="flex-1">
+            <input
+              autoFocus
+              value={single}
+              onChange={(event) => setSingle(event.target.value)}
+              className={cn(FIELD_CONTROL, "font-mono")}
+            />
+          </Field>
+        )}
       </div>
 
       <div className="mt-3 text-[12.5px] text-muted">{preview}</div>

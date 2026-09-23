@@ -20,12 +20,13 @@ import { ThreadMessage } from "./ThreadMessage";
 interface ConversationPanelProps {
   request: Request | undefined;
   session: GuestSession | null;
+  guestUrl: string | null;
   openInRoom: number;
   staffLang: LangCode;
   onStatusChange: (status: Status) => void;
   onAssign: (assignee: string) => void;
   onSend: (
-    message: Pick<Message, "text" | "lang" | "translations" | "photo">,
+    message: Pick<Message, "text" | "lang" | "translations">,
   ) => Promise<boolean>;
   onAddNote: (text: string) => Promise<boolean>;
   onCloseRoom: () => void;
@@ -35,6 +36,7 @@ interface ConversationPanelProps {
 export function ConversationPanel({
   request,
   session,
+  guestUrl,
   openInRoom,
   staffLang,
   onStatusChange,
@@ -76,6 +78,7 @@ export function ConversationPanel({
       <ConversationHeader
         request={request}
         session={session}
+        guestUrl={guestUrl}
         openInRoom={openInRoom}
         staffLang={staffLang}
         assignees={assignees}

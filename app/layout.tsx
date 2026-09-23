@@ -52,6 +52,8 @@ export const metadata: Metadata = {
   title: "RoomCall",
   description:
     "Guests ask for anything in their own language. The front desk reads it in theirs.",
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  appleWebApp: { capable: true, title: "RoomCall", statusBarStyle: "default" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

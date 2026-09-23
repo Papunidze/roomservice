@@ -3,11 +3,12 @@
 import { DICTIONARY } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 import { formatWhen } from "@/shared/lib/time";
+import { showToast } from "@/shared/ui";
 
 import type { Room } from "../types";
 
 const GRID =
-  "grid min-w-[560px] grid-cols-[36px_84px_130px_1fr_190px] items-center gap-3";
+  "grid min-w-[680px] grid-cols-[36px_150px_130px_1fr_270px] items-center gap-3";
 
 const ACTION =
   "min-h-7.5 cursor-pointer rounded-full border border-line px-2.5 text-[11.5px] text-faint transition-colors hover:border-ink/30 hover:text-ink";
@@ -19,8 +20,15 @@ interface RoomsTableProps {
   onToggle: (no: string) => void;
   onToggleAll: () => void;
   onShowPlate: (no: string) => void;
+  onEdit: (room: Room) => void;
   onCloseSession: (room: Room) => void;
 }
+
+const copyLink = (room: Room) =>
+  navigator.clipboard.writeText(room.url).then(
+    () => showToast(`Guest link copied · room ${room.no}`),
+    () => showToast("Could not copy the link"),
+  );
 
 export function RoomsTable({
   rooms,
@@ -29,6 +37,7 @@ export function RoomsTable({
   onToggle,
   onToggleAll,
   onShowPlate,
+  onEdit,
   onCloseSession,
 }: RoomsTableProps) {
   const allSelected = selected.size === rooms.length && rooms.length > 0;
@@ -76,8 +85,15 @@ export function RoomsTable({
                 aria-label={`Select room ${room.no}`}
                 className="size-4 cursor-pointer accent-sage"
               />
-              <span className="text-[17px] font-semibold tracking-[-0.03em]">
-                {room.no}
+              <span className="min-w-0">
+                <span className="block text-[17px] font-semibold tracking-[-0.03em]">
+                  {room.no}
+                </span>
+                {room.name ? (
+                  <span className="block truncate text-xs text-faint">
+                    {room.name}
+                  </span>
+                ) : null}
               </span>
               <span
                 className={cn(
@@ -114,6 +130,20 @@ export function RoomsTable({
                   className={ACTION}
                 >
                   Plate
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void copyLink(room)}
+                  className={ACTION}
+                >
+                  Copy link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onEdit(room)}
+                  className={ACTION}
+                >
+                  Edit
                 </button>
                 {room.session ? (
                   <button

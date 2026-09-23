@@ -11,7 +11,7 @@ const STEPS = [
   {
     icon: Smartphone,
     title: "Guests scan and tap",
-    body: "The page opens in the browser, offers the languages you enabled, then big chips for problems, items, room service and late checkout. A note and a photo if they want.",
+    body: "The page opens in the browser, offers the languages you enabled, then big chips for problems, items, your room service menu and late checkout. A typed note if they want.",
   },
   {
     icon: MessagesSquare,

@@ -11,6 +11,7 @@ export interface RoomDoc {
   _id: ObjectId;
   hotelId: ObjectId;
   no: string;
+  name: string;
   floor: number;
   token: string;
   printed: boolean;
@@ -21,6 +22,7 @@ export interface RoomDoc {
 
 export interface PublicRoom {
   no: string;
+  name: string;
   floor: number;
   printed: boolean;
   session: { lang: LangCode; since: string } | null;

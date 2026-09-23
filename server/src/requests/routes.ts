@@ -3,8 +3,9 @@ import { Router } from "express";
 import { parseBody } from "../lib/parse-body.js";
 import { currentUser } from "../lib/current-user.js";
 import { streamEvents } from "../lib/events.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, writesRequireActive } from "../middleware/auth.js";
 import {
+  historyQuerySchema,
   listQuerySchema,
   noteSchema,
   requestPatchSchema,
@@ -15,12 +16,13 @@ import {
   assignRequest,
   listRequests,
   replyToRequest,
+  searchHistory,
   setStatus,
 } from "./service.js";
 
 export const requestsRouter = Router();
 
-requestsRouter.use(requireAuth);
+requestsRouter.use(requireAuth, writesRequireActive);
 
 requestsRouter.get("/", async (req, res) => {
   const { since } = parseBody(listQuerySchema, req.query);
@@ -28,6 +30,11 @@ requestsRouter.get("/", async (req, res) => {
   res.json({
     requests: await listRequests(hotelId, since ? new Date(since) : undefined),
   });
+});
+
+requestsRouter.get("/history", async (req, res) => {
+  const query = parseBody(historyQuerySchema, req.query);
+  res.json(await searchHistory(currentUser(req).hotelId, query));
 });
 
 requestsRouter.get("/events", (req, res) => {

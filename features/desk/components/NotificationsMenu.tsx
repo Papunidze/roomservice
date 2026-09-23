@@ -4,6 +4,7 @@ import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useSession } from "@/features/auth";
 import {
   CATEGORY_ICON,
   CATEGORY_LABEL,
@@ -18,6 +19,7 @@ import { formatAgo } from "@/shared/lib/time";
 export function NotificationsMenu() {
   const requests = useRequests();
   const settings = useSettings();
+  const readingLang = useSession()?.lang ?? settings.staffLang;
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -78,7 +80,7 @@ export function NotificationsMenu() {
                   const Icon = CATEGORY_ICON[request.category];
                   const first = request.thread[0];
                   const summary = first
-                    ? resolveText(first, settings.staffLang)
+                    ? resolveText(first, readingLang)
                     : null;
                   return (
                     <button

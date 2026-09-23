@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { MongoServerError, ObjectId } from "mongodb";
 
 import { hotels, users } from "../db.js";
+import { ownerEmails } from "../env.js";
 import { createHotel } from "../hotels/service.js";
 import {
   emailTaken,
@@ -34,6 +35,8 @@ export async function toPublicUser(user: UserDoc): Promise<PublicUser> {
     email: user.email,
     hotel: hotel?.settings.hotel.name ?? "",
     role: user.role,
+    lang: user.lang,
+    isOwner: ownerEmails.has(user.email),
     twoFactorEnabled: Boolean(user.totp?.enabledAt),
   };
 }
@@ -47,8 +50,8 @@ export async function insertUser(input: NewUser) {
   const user: UserDoc = {
     _id: new ObjectId(),
     lang: "en",
-    telegram: false,
     onShift: false,
+    onShiftAt: null,
     lastActiveAt: null,
     createdAt: new Date(),
     ...input,
@@ -88,7 +91,10 @@ export async function authenticate(input: LoginInput) {
   if (!matches) throw invalidCredentials();
 
   await touchUser(user._id);
-  return { user: await toPublicUser(user), needsSecondFactor: Boolean(user.totp?.enabledAt) };
+  return {
+    user: await toPublicUser(user),
+    needsSecondFactor: Boolean(user.totp?.enabledAt),
+  };
 }
 
 export async function startTwoFactor(id: ObjectId) {

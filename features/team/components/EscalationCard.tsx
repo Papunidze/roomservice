@@ -7,13 +7,13 @@ import { NumberField, Switch } from "@/shared/ui";
 import { updateTeam } from "../store";
 import type { TeamState } from "../types";
 
-const TARGETS: StaffRole[] = ["Manager", "Front desk"];
+const TARGETS: StaffRole[] = ["Manager", "Supervisor", "Front desk"];
 
 export function EscalationCard({ team }: { team: TeamState }) {
   const { escalation } = team;
 
   const summary = escalation.enabled
-    ? `Right now: a request nobody has answered after ${escalation.minutes} minutes gets an “Escalated to ${escalation.target}” line in its history and stays in the Unanswered group, so the ${escalation.target} sees it needs a hand.`
+    ? `Right now: a request nobody has answered after ${escalation.minutes} minutes gets an “Escalated to ${escalation.target}” line in its history, and every ${escalation.target} gets an email with a link to it.`
     : "Off: unanswered requests are not flagged. They still stay in the Unanswered group.";
 
   return (
@@ -24,7 +24,8 @@ export function EscalationCard({ team }: { team: TeamState }) {
             If nobody answers
           </div>
           <div className="mt-0.5 text-[12.5px] text-faint">
-            Flag a request that has waited too long, so a manager steps in.
+            Flag a request that has waited too long and email the people who
+            should step in.
           </div>
         </div>
         <Switch

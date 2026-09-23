@@ -2,6 +2,7 @@ export const SECTIONS = [
   { key: "profile", label: "Hotel profile" },
   { key: "info", label: "Guest info page" },
   { key: "categories", label: "Categories & chips" },
+  { key: "menu", label: "Menu & checkout" },
   { key: "notifications", label: "Notifications" },
   { key: "sessions", label: "Sessions" },
   { key: "security", label: "Security" },

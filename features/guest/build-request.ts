@@ -1,7 +1,8 @@
 import {
+  dishName,
   itemLabel,
-  URGENT_PROBLEMS,
   translateAll,
+  URGENT_PROBLEMS,
   type CheckoutOption,
   type Dish,
   type GuestLanguage,
@@ -28,13 +29,12 @@ interface DraftInput {
   category: Request["category"];
   urgency: Request["urgency"];
   build: (lang: LangCode) => string;
-  photo?: boolean;
   freeText?: boolean;
 }
 
 function draft(
   { room, language }: Base,
-  { category, urgency, build, photo, freeText }: DraftInput,
+  { category, urgency, build, freeText }: DraftInput,
 ): Draft {
   const translations = translateAll(build);
   return {
@@ -51,7 +51,6 @@ function draft(
         lang: language.base,
         text: build(language.base),
         translations,
-        photo: photo ?? false,
         freeText: freeText ?? false,
         minutesAgo: 0,
       },
@@ -61,13 +60,12 @@ function draft(
 
 export function problemRequest(
   base: Base,
-  input: { keys: ProblemKey[]; note: string; photo: boolean },
+  input: { keys: ProblemKey[]; note: string },
 ) {
   const urgent = input.keys.some((key) => URGENT_PROBLEMS.includes(key));
   return draft(base, {
     category: input.keys[0] ?? "other",
     urgency: urgent ? "high" : "medium",
-    photo: input.photo,
     freeText: input.note.trim().length > 0,
     build: (lang) => {
       const phrases = DICTIONARY[lang];
@@ -93,7 +91,7 @@ export function serviceRequest(base: Base, dish: Dish) {
   return draft(base, {
     category: "service",
     urgency: "medium",
-    build: () => `${dish.name} — ${formatGel(dish.priceTetri)}`,
+    build: (lang) => `${dishName(dish, lang)} — ${formatGel(dish.priceTetri)}`,
   });
 }
 

@@ -2,12 +2,14 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 
+import { adminRouter } from "./admin/routes.js";
 import { analyticsRouter } from "./analytics/routes.js";
 import { authRouter } from "./auth/routes.js";
 import { clientOrigins, isProduction } from "./env.js";
 import { guestRouter } from "./guest/routes.js";
-import { settingsRouter } from "./hotels/routes.js";
+import { billingRouter, settingsRouter } from "./hotels/routes.js";
 import { errorHandler, notFound } from "./middleware/errors.js";
+import { authLimiter } from "./middleware/rate-limit.js";
 import { requestsRouter } from "./requests/routes.js";
 import { roomsRouter } from "./rooms/routes.js";
 import { teamRouter } from "./team/routes.js";
@@ -26,12 +28,14 @@ export function createApp() {
     res.json({ ok: true });
   });
 
-  app.use("/api/auth", authRouter);
+  app.use("/api/auth", authLimiter, authRouter);
   app.use("/api/settings", settingsRouter);
+  app.use("/api/billing", billingRouter);
   app.use("/api/rooms", roomsRouter);
   app.use("/api/requests", requestsRouter);
   app.use("/api/team", teamRouter);
   app.use("/api/analytics", analyticsRouter);
+  app.use("/api/admin", adminRouter);
   app.use("/api/guest/:token", guestRouter);
 
   app.use(notFound);

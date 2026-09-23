@@ -21,8 +21,8 @@ export interface PublicMember {
   email: string;
   role: UserDoc["role"];
   lang: UserDoc["lang"];
-  telegram: boolean;
   onShift: boolean;
+  onShiftSince: string | null;
   lastActive: string | null;
   hasPassword: boolean;
 }
@@ -40,8 +40,8 @@ export function toPublicMember(user: UserDoc): PublicMember {
     email: user.email,
     role: user.role,
     lang: user.lang,
-    telegram: user.telegram,
     onShift: user.onShift,
+    onShiftSince: user.onShift ? (user.onShiftAt?.toISOString() ?? null) : null,
     lastActive: user.lastActiveAt?.toISOString() ?? null,
     hasPassword: Boolean(user.passwordHash || user.googleId),
   };
@@ -121,9 +121,12 @@ export async function patchMember(
   patch: z.infer<typeof memberPatchSchema>,
 ) {
   if (!ObjectId.isValid(id)) throw memberNotFound();
+  const $set: Partial<UserDoc> = { ...patch };
+  if (patch.onShift !== undefined)
+    $set.onShiftAt = patch.onShift ? new Date() : null;
   const user = await users().findOneAndUpdate(
     { _id: new ObjectId(id), hotelId },
-    { $set: patch },
+    { $set },
     { returnDocument: "after" },
   );
   if (!user) throw memberNotFound();
@@ -137,4 +140,15 @@ export async function removeMember(hotelId: ObjectId, id: string) {
   const result = await users().deleteOne({ _id: new ObjectId(id), hotelId });
   if (result.deletedCount === 0) throw memberNotFound();
   publish(hotelId.toHexString(), { type: "team" });
+}
+
+export async function endLongShifts(hotelId: ObjectId, offShiftHours: number) {
+  const cutoff = new Date(Date.now() - offShiftHours * 60 * 60_000);
+  const result = await users().updateMany(
+    { hotelId, onShift: true, onShiftAt: { $lt: cutoff } },
+    { $set: { onShift: false, onShiftAt: null } },
+  );
+  if (result.modifiedCount > 0)
+    publish(hotelId.toHexString(), { type: "team" });
+  return result.modifiedCount;
 }

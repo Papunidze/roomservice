@@ -1,7 +1,5 @@
 "use client";
 
-import { Camera } from "lucide-react";
-
 import {
   CATEGORY_LABEL,
   resolveText,
@@ -13,24 +11,23 @@ import { cn } from "@/shared/lib/cn";
 import { formatAgo } from "@/shared/lib/time";
 import { Flag } from "@/shared/ui";
 
-const WAITING_AFTER_MINUTES = 15;
-
 interface RequestCardProps {
   request: Request;
   readingLang: LangCode;
+  waitingAfter: number;
   onOpen: (id: number) => void;
 }
 
 export function RequestCard({
   request,
   readingLang,
+  waitingAfter,
   onOpen,
 }: RequestCardProps) {
   const first = request.thread[0];
   const summary = first ? resolveText(first, readingLang) : null;
   const isUnanswered = request.status === "new";
-  const isWaiting = isUnanswered && request.minutesAgo >= WAITING_AFTER_MINUTES;
-  const hasPhoto = request.thread.some((message) => message.photo);
+  const isWaiting = isUnanswered && request.minutesAgo >= waitingAfter;
 
   return (
     <button
@@ -84,7 +81,6 @@ export function RequestCard({
             ? "Nobody assigned"
             : request.assignee}
         </span>
-        {hasPhoto ? <Camera strokeWidth={1.6} className="size-3.5" /> : null}
         <span className={cn("ml-auto", isWaiting && "font-medium text-urgent")}>
           {isWaiting
             ? `waiting ${request.minutesAgo} min`

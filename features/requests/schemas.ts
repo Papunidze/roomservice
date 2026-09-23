@@ -7,13 +7,15 @@ import { CATEGORIES, MESSAGE_KINDS, STAFF_ROLES } from "./types";
 
 export const langCodeSchema = z.enum(LANGUAGES);
 
+const translations = z.partialRecord(langCodeSchema, z.string());
+
 const messageSchema = z.object({
   from: z.enum(MESSAGE_KINDS),
   by: z.string().optional(),
   lang: langCodeSchema,
   text: z.string(),
-  translations: z.partialRecord(langCodeSchema, z.string()),
-  photo: z.boolean().optional(),
+  translations,
+  at: z.string().optional(),
   minutesAgo: z.number(),
 });
 
@@ -34,6 +36,13 @@ export const requestSchema = z.object({
   assignee: z.string(),
   archived: z.boolean().optional(),
   createdAt: z.string().optional(),
+  firstResponseAt: z.string().nullable().optional(),
+  progressAt: z.string().nullable().optional(),
+  resolvedAt: z.string().nullable().optional(),
+  rating: z
+    .object({ score: z.number(), comment: z.string(), at: z.string() })
+    .nullable()
+    .optional(),
   thread: z.array(messageSchema),
 });
 
@@ -66,18 +75,38 @@ export const settingsSchema = z.object({
   }),
   categories: z.record(z.enum(CONFIGURABLE_CATEGORIES), categorySettingSchema),
   items: z.array(
-    z.object({ key: z.string(), label: z.string(), available: z.boolean() }),
+    z.object({
+      key: z.string(),
+      label: z.string(),
+      available: z.boolean(),
+      translations,
+    }),
+  ),
+  service: z.object({
+    open: z.string(),
+    close: z.string(),
+    deliveryMinutes: z.number(),
+    dishes: z.array(
+      z.object({
+        key: z.string(),
+        name: z.string(),
+        note: z.string(),
+        priceTetri: z.number(),
+        available: z.boolean(),
+        translations,
+      }),
+    ),
+  }),
+  lateCheckout: z.array(
+    z.object({ time: z.string(), surchargeTetri: z.number() }),
   ),
   notifications: z.object({
+    sound: z.boolean(),
+    renotifyMinutes: z.number(),
     telegram: z.boolean(),
     group: z.string(),
-    renotifyMinutes: z.number(),
-    quietHours: z.boolean(),
-    quietFrom: z.string(),
-    quietTo: z.string(),
   }),
   sessions: z.object({
     autoCloseHours: z.number(),
-    requireClose: z.boolean(),
   }),
 });

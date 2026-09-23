@@ -18,6 +18,7 @@ import {
   createGuestRequest,
   openGuestSession,
   plateSettings,
+  rateGuestRequest,
   sendGuestMessage,
   type Plate,
 } from "../api";
@@ -46,12 +47,14 @@ import { TrackScreen } from "./TrackScreen";
 interface GuestAppProps {
   token: string;
   preview?: Plate;
+  embedded?: boolean;
 }
 
 let previewSeq = 0;
 
-export function GuestApp({ token, preview }: GuestAppProps) {
+export function GuestApp({ token, preview, embedded }: GuestAppProps) {
   const isPreview = preview !== undefined;
+  const isEmbedded = embedded ?? isPreview;
   const plateState = usePlate(token, preview);
   const { requests, setRequests } = useRoomRequests(
     token,
@@ -70,10 +73,10 @@ export function GuestApp({ token, preview }: GuestAppProps) {
   const showTracking = useCallback(() => setScreen("track"), []);
 
   if (plateState.status === "loading")
-    return <GuestFrame language={null} isEmbedded={isPreview} />;
+    return <GuestFrame language={null} isEmbedded={isEmbedded} />;
   if (plateState.status === "invalid") {
     return (
-      <GuestFrame language={null} isEmbedded={isPreview}>
+      <GuestFrame language={null} isEmbedded={isEmbedded}>
         <PlateMissing />
       </GuestFrame>
     );
@@ -94,7 +97,7 @@ export function GuestApp({ token, preview }: GuestAppProps) {
 
   if (!language) {
     return (
-      <GuestFrame language={null} isEmbedded={isPreview}>
+      <GuestFrame language={null} isEmbedded={isEmbedded}>
         <LanguageScreen
           room={room}
           settings={settings}
@@ -157,11 +160,24 @@ export function GuestApp({ token, preview }: GuestAppProps) {
     if (result.ok) upsert(result.data.request);
   };
 
+  const rate = async (request: Request, score: number) => {
+    const rating = { score, comment: "", at: new Date().toISOString() };
+    if (isPreview) {
+      upsert({ ...request, rating });
+      return;
+    }
+    const result = await rateGuestRequest(token, request.id, {
+      score,
+      comment: "",
+    });
+    if (result.ok) upsert(result.data.request);
+  };
+
   const base = { room, language };
   const goHome = () => setScreen("home");
 
   return (
-    <GuestFrame language={language} isEmbedded={isPreview}>
+    <GuestFrame language={language} isEmbedded={isEmbedded}>
       {screen === "home" ? (
         <HomeScreen
           room={room}
@@ -180,11 +196,9 @@ export function GuestApp({ token, preview }: GuestAppProps) {
           settings={settings}
           isSending={isSending}
           onBack={goHome}
-          onSubmit={(input: {
-            keys: ProblemKey[];
-            note: string;
-            photo: boolean;
-          }) => submit(problemRequest(base, input))}
+          onSubmit={(input: { keys: ProblemKey[]; note: string }) =>
+            submit(problemRequest(base, input))
+          }
         />
       ) : null}
 
@@ -202,6 +216,8 @@ export function GuestApp({ token, preview }: GuestAppProps) {
       {screen === "service" ? (
         <RoomServiceScreen
           phrases={phrases}
+          lang={language.base}
+          service={settings.service}
           isSending={isSending}
           onBack={goHome}
           onSubmit={(dish: Dish) => submit(serviceRequest(base, dish))}
@@ -211,6 +227,7 @@ export function GuestApp({ token, preview }: GuestAppProps) {
       {screen === "checkout" ? (
         <LateCheckoutScreen
           phrases={phrases}
+          options={settings.lateCheckout}
           isSending={isSending}
           onBack={goHome}
           onSubmit={(option: CheckoutOption) =>
@@ -239,6 +256,7 @@ export function GuestApp({ token, preview }: GuestAppProps) {
             request={active}
             onBack={goHome}
             onReply={(text) => void reply(active, text)}
+            onRate={(score) => void rate(active, score)}
           />
         ) : (
           <div className="px-5.5 pt-20 text-center">

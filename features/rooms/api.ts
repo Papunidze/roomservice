@@ -5,6 +5,7 @@ import { apiGet, apiPatch, apiPost, apiRemove, unwrap } from "@/shared/lib/api";
 
 const roomSchema = z.object({
   no: z.string(),
+  name: z.string(),
   floor: z.number(),
   printed: z.boolean(),
   session: z.object({ lang: langCodeSchema, since: z.string() }).nullable(),
@@ -30,11 +31,11 @@ export const printRooms = (numbers: string[]) =>
 
 export const patchRoomApi = (
   no: string,
-  patch: { printed?: boolean; session?: null },
-) => apiPatch(`/api/rooms/${no}`, patch, oneRoom);
+  patch: { printed?: boolean; name?: string; floor?: number; session?: null },
+) => apiPatch(`/api/rooms/${encodeURIComponent(no)}`, patch, oneRoom);
 
 export const regenerateRoomToken = (no: string) =>
-  apiPost(`/api/rooms/${no}/token`, {}, oneRoom);
+  apiPost(`/api/rooms/${encodeURIComponent(no)}/token`, {}, oneRoom);
 
 export const closeRoomApi = (no: string) =>
-  apiPost(`/api/rooms/${no}/close`, {}, closedSchema);
+  apiPost(`/api/rooms/${encodeURIComponent(no)}/close`, {}, closedSchema);

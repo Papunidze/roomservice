@@ -1,14 +1,15 @@
-import type { ObjectId, UpdateFilter } from "mongodb";
+import type { Filter, ObjectId, UpdateFilter } from "mongodb";
 import { ObjectId as Id } from "mongodb";
 import { randomUUID } from "node:crypto";
 import type { z } from "zod";
 
 import { requests, users } from "../db.js";
+import { clientOrigin } from "../env.js";
 import { getHotel } from "../hotels/service.js";
 import {
-  routingGroupFor,
   UNASSIGNED,
   type Category,
+  type LangCode,
   type StaffRole,
   type Status,
 } from "../domain.js";
@@ -16,11 +17,20 @@ import type { HotelDoc } from "../hotels/types.js";
 import { publish } from "../lib/events.js";
 import { HttpError } from "../lib/http-error.js";
 import { nextSequence } from "../lib/ids.js";
+import { sendMail } from "../lib/mail.js";
 import { touchRoom } from "../rooms/service.js";
 import { translateInBackground } from "./translate-thread.js";
-import type { createRequestSchema, staffReplySchema } from "./schemas.js";
+import type {
+  createRequestSchema,
+  historyQuerySchema,
+  ratingSchema,
+  staffReplySchema,
+} from "./schemas.js";
 import { toPublicRequest } from "./serialize.js";
 import type { MessageDoc, RequestDoc } from "./types.js";
+
+const INBOX_DONE_DAYS = 7;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 const STATUS_LABEL: Record<Status, string> = {
   new: "New",
@@ -41,7 +51,15 @@ const system = (text: string): MessageDoc => ({
 });
 
 export async function listRequests(hotelId: ObjectId, since?: Date) {
-  const filter = since ? { hotelId, updatedAt: { $gt: since } } : { hotelId };
+  const recent = new Date(Date.now() - INBOX_DONE_DAYS * DAY_MS);
+  const scope: Filter<RequestDoc> = {
+    hotelId,
+    archived: false,
+    $or: [{ status: { $ne: "done" } }, { updatedAt: { $gte: recent } }],
+  };
+  const filter: Filter<RequestDoc> = since
+    ? { ...scope, updatedAt: { $gt: since } }
+    : scope;
   const docs = await requests()
     .find(filter)
     .sort({ createdAt: -1 })
@@ -49,6 +67,36 @@ export async function listRequests(hotelId: ObjectId, since?: Date) {
     .toArray();
   const now = Date.now();
   return docs.map((doc) => toPublicRequest(doc, now));
+}
+
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+export async function searchHistory(
+  hotelId: ObjectId,
+  { q, before, limit }: z.infer<typeof historyQuerySchema>,
+) {
+  const filter: Filter<RequestDoc> = { hotelId };
+  if (before) filter.createdAt = { $lt: new Date(before) };
+  if (q) {
+    const pattern = new RegExp(escapeRegex(q), "i");
+    filter.$or = [
+      { roomNo: pattern },
+      { assignee: pattern },
+      { "thread.text": pattern },
+      { "thread.translations.en": pattern },
+    ];
+  }
+  const docs = await requests()
+    .find(filter)
+    .sort({ createdAt: -1 })
+    .limit(limit + 1)
+    .toArray();
+  const now = Date.now();
+  return {
+    requests: docs.slice(0, limit).map((doc) => toPublicRequest(doc, now)),
+    hasMore: docs.length > limit,
+  };
 }
 
 export async function listRoomRequests(hotelId: ObjectId, roomNo: string) {
@@ -75,9 +123,20 @@ export function roleFor(hotel: HotelDoc, category: Category): StaffRole | null {
     hotel.settings.categories[
       category as keyof HotelDoc["settings"]["categories"]
     ];
-  if (configured) return configured.role;
-  const group = routingGroupFor(category);
-  return group ? hotel.team.routing[group] : null;
+  return configured?.role ?? null;
+}
+
+async function readerLanguages(hotel: HotelDoc): Promise<LangCode[]> {
+  const members = await users()
+    .find({ hotelId: hotel._id }, { projection: { lang: 1 } })
+    .toArray();
+  return [
+    ...new Set([
+      hotel.settings.staffLang,
+      "en" as LangCode,
+      ...members.map((m) => m.lang),
+    ]),
+  ];
 }
 
 export async function createRequest(
@@ -103,7 +162,9 @@ export async function createRequest(
     archived: false,
     escalatedAt: null,
     firstResponseAt: null,
+    progressAt: null,
     resolvedAt: null,
+    rating: null,
     createdAt: now,
     updatedAt: now,
     thread: [
@@ -113,7 +174,6 @@ export async function createRequest(
         lang: input.language.base,
         text: input.text,
         translations: input.freeText ? {} : input.translations,
-        photo: input.photo,
         at: now,
       },
     ],
@@ -127,10 +187,11 @@ export async function createRequest(
   });
   const first = doc.thread[0];
   if (first)
-    translateInBackground({ hotelId: hotel._id, seq: doc.seq, roomNo }, first, [
-      hotel.settings.staffLang,
-      "en",
-    ]);
+    translateInBackground(
+      { hotelId: hotel._id, seq: doc.seq, roomNo },
+      first,
+      await readerLanguages(hotel),
+    );
   return toPublicRequest(doc);
 }
 
@@ -175,11 +236,36 @@ export async function addGuestMessage(
   };
   const result = await apply(hotelId, seq, { $push: { thread: line } });
   const hotel = await getHotel(hotelId);
-  translateInBackground({ hotelId, seq, roomNo: doc.roomNo }, line, [
-    hotel.settings.staffLang,
-    "en",
-  ]);
+  translateInBackground(
+    { hotelId, seq, roomNo: doc.roomNo },
+    line,
+    await readerLanguages(hotel),
+  );
   return result;
+}
+
+export async function rateRequest(
+  hotelId: ObjectId,
+  seq: number,
+  input: z.infer<typeof ratingSchema>,
+) {
+  const doc = await findDoc(hotelId, seq);
+  if (doc.status !== "done")
+    throw new HttpError(
+      400,
+      "not_done",
+      "Only a finished request can be rated",
+    );
+  return apply(hotelId, seq, {
+    $set: { rating: { ...input, at: new Date() } },
+  });
+}
+
+function progressLines(doc: RequestDoc, $set: Partial<RequestDoc>) {
+  if (doc.status !== "new") return [];
+  $set.status = "progress";
+  $set.progressAt = new Date();
+  return [system("Status → In progress")];
 }
 
 export async function replyToRequest(
@@ -204,10 +290,7 @@ export async function replyToRequest(
     $set.assignee = by;
     lines.push(system(`${by} took the ticket`));
   }
-  if (doc.status === "new") {
-    $set.status = "progress";
-    lines.push(system("Status → In progress"));
-  }
+  lines.push(...progressLines(doc, $set));
 
   const result = await apply(hotelId, seq, {
     $set,
@@ -257,10 +340,7 @@ export async function assignRequest(
     ),
   ];
   const $set: Partial<RequestDoc> = { assignee };
-  if (doc.status === "new" && assignee !== UNASSIGNED) {
-    $set.status = "progress";
-    lines.push(system("Status → In progress"));
-  }
+  if (assignee !== UNASSIGNED) lines.push(...progressLines(doc, $set));
   return apply(hotelId, seq, { $set, $push: { thread: { $each: lines } } });
 }
 
@@ -274,6 +354,7 @@ export async function setStatus(
 
   const $set: Partial<RequestDoc> = { status };
   if (status === "done") $set.resolvedAt = new Date();
+  if (status === "progress" && !doc.progressAt) $set.progressAt = new Date();
   return apply(hotelId, seq, {
     $set,
     $push: { thread: system(`Status → ${STATUS_LABEL[status]}`) },
@@ -287,6 +368,22 @@ export async function archiveRoomRequests(hotelId: ObjectId, roomNo: string) {
   );
   publish(hotelId.toHexString(), { type: "request", id: 0, room: roomNo });
   return result.modifiedCount;
+}
+
+async function notifyEscalation(hotel: HotelDoc, doc: RequestDoc) {
+  const targets = await users()
+    .find({ hotelId: hotel._id, role: hotel.team.escalation.target })
+    .toArray();
+  const hotelName = hotel.settings.hotel.name || "your hotel";
+  await Promise.all(
+    targets.map((member) =>
+      sendMail({
+        to: member.email,
+        subject: `Room ${doc.roomNo} has waited ${hotel.team.escalation.minutes} min · ${hotelName}`,
+        text: `Hi ${member.name},\n\nA ${doc.category} request from room ${doc.roomNo} has had no answer for ${hotel.team.escalation.minutes} minutes.\n\nOpen it: ${clientOrigin}/desk?open=${doc.seq}`,
+      }).catch((error: unknown) => console.error("[escalation mail]", error)),
+    ),
+  );
 }
 
 export async function escalateStale(hotel: HotelDoc) {
@@ -311,6 +408,7 @@ export async function escalateStale(hotel: HotelDoc) {
         ),
       },
     });
+    await notifyEscalation(hotel, doc);
   }
   return stale.length;
 }

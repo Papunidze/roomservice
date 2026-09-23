@@ -14,6 +14,7 @@ import { BillingPanel } from "./BillingPanel";
 import { CategoriesPanel } from "./CategoriesPanel";
 import { GuestInfoPanel } from "./GuestInfoPanel";
 import { HotelProfilePanel } from "./HotelProfilePanel";
+import { MenuPanel } from "./MenuPanel";
 import { NotificationsPanel } from "./NotificationsPanel";
 import { SecurityPanel } from "./SecurityPanel";
 import { SessionsPanel } from "./SessionsPanel";
@@ -93,6 +94,9 @@ export function SettingsScreen({
         ) : null}
         {section === "categories" ? (
           <CategoriesPanel settings={draft} onChange={onChange} />
+        ) : null}
+        {section === "menu" ? (
+          <MenuPanel settings={draft} onChange={onChange} />
         ) : null}
         {section === "notifications" ? (
           <NotificationsPanel settings={draft} onChange={onChange} />

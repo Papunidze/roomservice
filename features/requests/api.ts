@@ -7,15 +7,25 @@ import type { Settings } from "./settings";
 import type { Message, Status } from "./types";
 
 const requestsSchema = z.object({ requests: storedRequestsSchema });
+const historySchema = z.object({
+  requests: storedRequestsSchema,
+  hasMore: z.boolean(),
+});
 const oneRequest = z.object({ request: requestSchema });
 const oneSettings = z.object({ settings: settingsSchema });
 
 export const fetchRequests = () =>
   apiGet("/api/requests", requestsSchema).then((r) => unwrap(r).requests);
 
+export function fetchHistory(query: { q: string; before?: string }) {
+  const params = new URLSearchParams({ q: query.q });
+  if (query.before) params.set("before", query.before);
+  return apiGet(`/api/requests/history?${params}`, historySchema);
+}
+
 export const replyToRequest = (
   id: number,
-  message: Pick<Message, "text" | "lang" | "translations" | "photo">,
+  message: Pick<Message, "text" | "lang" | "translations">,
 ) => apiPost(`/api/requests/${id}/reply`, message, oneRequest);
 
 export const addRequestNote = (id: number, text: string) =>

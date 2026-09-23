@@ -51,7 +51,18 @@ export const wrongCode = () =>
   });
 
 export const twoFactorAlreadyOn = () =>
-  new HttpError(409, "two_factor_on", "Two-factor authentication is already on");
+  new HttpError(
+    409,
+    "two_factor_on",
+    "Two-factor authentication is already on",
+  );
 
 export const invalidTicket = () =>
   new HttpError(401, "invalid_ticket", "Sign in again to continue");
+
+export const subscriptionExpired = () =>
+  new HttpError(
+    402,
+    "subscription_expired",
+    "Your RoomCall plan has ended. Contact us to continue.",
+  );

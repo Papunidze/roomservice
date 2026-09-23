@@ -58,11 +58,13 @@ callback goes through the same proxy. `features/auth/store.ts` keeps a localStor
 of the public user for instant header rendering; `AuthGate` re-checks
 `/api/auth/me` on mount and sends anonymous visitors to `/sign-in`.
 
-Roles: registration creates the hotel's Manager; invited members get a staff
-role and see only the Inbox — the desk nav hides the other sections and
-`DeskBoot` bounces them back to `/desk`; the API refuses their writes with 403.
-The console UI is English only; the hotel's "team language" in Settings is the
-language guest messages are translated into and replies are written in.
+Roles: registration creates the hotel's Manager. Supervisors see everything
+but Settings; Front desk, Housekeeping, Maintenance and Kitchen see only the
+Inbox — the desk nav hides the other sections and `DeskBoot` bounces them back
+to `/desk`; the API refuses their writes with 403. The console UI is English
+only. Each member has a reading language (set on the Team page); guest
+messages are translated into it, and replies are written in it. The hotel's
+"team language" in Settings is the default for new members.
 
 Guests reach `/r/[room]?t=<token>`; the token comes from the room's QR plate
 (rendered with the `qrcode` package) and is the only credential a guest has.
@@ -70,17 +72,19 @@ Without a valid token the page shows a "scan the plate" message. The guest
 thread only ever contains `guest` and `staff` lines — the server strips system
 lines and notes before they leave.
 
-"Translation" is still a lookup table in `shared/i18n/dictionary.ts`, not a
-model call. Not built yet: photo upload, Telegram delivery (settings are
-stored, nothing is sent), the QR pack PDF, rate limiting.
+Everything a guest taps comes from the phrasebook in
+`shared/i18n/dictionary.ts`; free text (guest notes, staff replies, custom
+item and dish names) is translated by the API in the background, with Claude
+when `ANTHROPIC_API_KEY` is set and MyMemory otherwise. Not built yet: photo
+upload, Telegram delivery (the group is stored, nothing is sent), the QR pack
+PDF, email verification.
 
-The front desk is one console at `/desk` with six sections: Inbox, Rooms,
-Team, Analytics, Preview, Settings. The bell in the header lists unanswered
-requests and opens one via `/desk?open=<id>`.
-
-`supabase/` and `shared/types/supabase.ts` still hold the schema of the
-previous product (a salon booking SaaS) and do not describe RoomCall. Do not
-build against them — replace them when the backend work starts.
+The front desk is one console at `/desk` with seven sections: Inbox, History,
+Rooms, Team, Analytics, Preview, Settings. The bell in the header lists
+unanswered requests and opens one via `/desk?open=<id>`; a chime and a browser
+notification fire on new tickets. Hotels start on a 30-day trial; when it or
+the paid period ends the API refuses writes with 402 and the header shows a
+banner. The operator manages plans at `/admin` (emails in `OWNER_EMAILS`).
 
 ## Stack (do not change without asking)
 
@@ -114,9 +118,10 @@ features/
     schemas.ts                Zod schemas for persisted state
     catalog.ts                categories, icons, items, dishes, hotel facts
     language.ts               GuestLanguage helpers, resolveText, translateAll
-    settings.ts               Settings shape + seed (read by both surfaces)
-    settings-store.ts         hotel profile, guest languages, categories, items
-    demo-data.ts              seed requests + analytics figures
+    settings.ts               Settings shape (read by both surfaces)
+    settings-store.ts         hotel profile, guest languages, categories, menu
+    billing.ts                plan + trial state
+    analytics.ts              analytics hook + formatting
     store.ts                  request store
     index.ts                  public API
   guest/
@@ -127,18 +132,20 @@ features/
     index.ts
   desk/
     actions.ts                reply / note / assign / status / close room
-    components/               header, filters, list, conversation, composer,
-                              thread messages, analytics
+    use-ticket-alerts.ts      title flash, chime, browser notification
+    components/               header, boot, onboarding, inbox, history,
+                              conversation, composer, thread, analytics
     index.ts
   rooms/
-    seed.ts, store.ts         rooms, floors, QR state, guest sessions
-    plate-pattern.ts          pure: deterministic placeholder plate artwork
-    components/               table, QR plate panel, add-rooms modal
+    store.ts                  rooms, floors, QR state, guest sessions
+    components/               table, QR plate panel, add/edit modals, print
   team/
-    store.ts                  members, routing rules, escalation
-    components/               table, routing, escalation, invite modal
+    store.ts                  members, auto-assign, escalation
+    components/               table, assignment, escalation, invite modal
   settings/
-    components/               six panels + the settings shell
+    components/               eight panels + the settings shell
+  admin/
+    components/               operator back-office: hotels, plans, trials
   auth/
     credentials.ts            pure: form values -> field errors
     credentials.test.ts
@@ -155,7 +162,6 @@ shared/
   lib/                        cn, money, initials, store factory
   ui/                         console primitives: Button, Chip, Switch, Modal,
                               Avatar, Field, toast + confirm hosts
-  types/                      stale Supabase types only
 ```
 
 Rules:
@@ -173,8 +179,9 @@ Rules:
   tsconfig excludes it and the root eslint ignores it; run its checks from
   inside the folder.
 - Configuration both surfaces read (hotel profile, guest info, enabled
-  languages, categories, item menu) lives in `features/requests` — the guest
-  app must never import the console features. `features/settings` is UI only.
+  languages, categories, item menu, room service menu, late checkout) lives in
+  `features/requests` — the guest app must never import the console features.
+  `features/settings` is UI only.
 - Anything shared by two console features goes in `shared/ui`; `shared/ui`
   stays free of domain knowledge (pass names and labels in as props).
 

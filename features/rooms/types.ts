@@ -7,6 +7,7 @@ export interface GuestSession {
 
 export interface Room {
   no: string;
+  name: string;
   floor: number;
   printed: boolean;
   session: GuestSession | null;

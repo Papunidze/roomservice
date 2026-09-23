@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -64,11 +65,12 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
           key: `custom-${label.toLowerCase().replace(/\s+/g, "-")}`,
           label,
           available: true,
+          translations: {},
         },
       ],
     });
     setDraft("");
-    showToast(`“${label}” added · shown to guests exactly as typed`);
+    showToast(`“${label}” added · translated for guests after you save`);
   };
 
   return (
@@ -176,7 +178,8 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
           <div className="text-[15px] font-semibold">Item request menu</div>
           <div className="mt-0.5 text-[12.5px] text-faint">
             Unavailable items disappear from the guest’s list. Items you add
-            here are shown as typed — only the catalogue items are translated.
+            here are translated into every enabled guest language after you
+            save.
           </div>
         </div>
         <div className="flex min-h-10 items-center gap-2 self-start rounded-full border border-line-strong bg-surface pr-1.5 pl-3.5">
@@ -218,32 +221,51 @@ export function CategoriesPanel({ settings, onChange }: SettingsPanelProps) {
               )}
             >
               {item.label}
-              {CATALOGUE.has(item.key) ? null : (
+              {CATALOGUE.has(item.key) ||
+              Object.keys(item.translations).length > 0 ? null : (
                 <span className="ml-1.5 font-mono text-[9.5px] tracking-[0.12em] text-ghost uppercase">
-                  as typed
+                  translating
                 </span>
               )}
             </span>
-            <button
-              type="button"
-              onClick={() =>
-                onChange({
-                  items: settings.items.map((entry) =>
-                    entry.key === item.key
-                      ? { ...entry, available: !entry.available }
-                      : entry,
-                  ),
-                })
-              }
-              className={cn(
-                "min-h-7.5 cursor-pointer rounded-full px-2.5 text-[11.5px] font-medium",
-                item.available
-                  ? "bg-sage/10 text-sage-deep"
-                  : "bg-ink/5 text-faint",
+            <span className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() =>
+                  onChange({
+                    items: settings.items.map((entry) =>
+                      entry.key === item.key
+                        ? { ...entry, available: !entry.available }
+                        : entry,
+                    ),
+                  })
+                }
+                className={cn(
+                  "min-h-7.5 cursor-pointer rounded-full px-2.5 text-[11.5px] font-medium",
+                  item.available
+                    ? "bg-sage/10 text-sage-deep"
+                    : "bg-ink/5 text-faint",
+                )}
+              >
+                {item.available ? "Available" : "Unavailable"}
+              </button>
+              {CATALOGUE.has(item.key) ? null : (
+                <button
+                  type="button"
+                  aria-label={`Delete ${item.label}`}
+                  onClick={() =>
+                    onChange({
+                      items: settings.items.filter(
+                        (entry) => entry.key !== item.key,
+                      ),
+                    })
+                  }
+                  className="grid size-7.5 cursor-pointer place-items-center rounded-full text-faint hover:text-urgent"
+                >
+                  <Trash2 strokeWidth={1.6} className="size-3.5" />
+                </button>
               )}
-            >
-              {item.available ? "Available" : "Unavailable"}
-            </button>
+            </span>
           </div>
         ))}
       </div>

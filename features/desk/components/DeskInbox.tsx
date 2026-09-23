@@ -12,6 +12,7 @@ import {
   type Status,
 } from "@/features/requests";
 import { useRooms } from "@/features/rooms";
+import { useTeam } from "@/features/team";
 import { cn } from "@/shared/lib/cn";
 import { Avatar, Chip } from "@/shared/ui";
 
@@ -23,6 +24,7 @@ import {
   setRequestStatus,
 } from "../actions";
 import { ConversationSheet } from "./ConversationSheet";
+import { OnboardingChecklist } from "./OnboardingChecklist";
 import { RequestCard } from "./RequestCard";
 import { STATUS_TITLE } from "./StatusPill";
 
@@ -60,7 +62,11 @@ export function DeskInbox({ initialRoom, initialOpenId }: DeskInboxProps) {
   const requests = useRequests();
   const rooms = useRooms();
   const settings = useSettings();
-  const agent = useSession()?.name ?? "";
+  const team = useTeam();
+  const session = useSession();
+  const agent = session?.name ?? "";
+  const readingLang = session?.lang ?? settings.staffLang;
+  const waitingAfter = team.escalation.minutes;
   const [selectedId, setSelectedId] = useState(initialOpenId);
   const [seenOpenId, setSeenOpenId] = useState(initialOpenId);
   if (initialOpenId !== seenOpenId) {
@@ -83,8 +89,7 @@ export function DeskInbox({ initialRoom, initialOpenId }: DeskInboxProps) {
   });
 
   const selected = live.find((request) => request.id === selectedId);
-  const session =
-    rooms.find((room) => room.no === selected?.room)?.session ?? null;
+  const selectedRoom = rooms.find((room) => room.no === selected?.room);
   const openInRoom = selected
     ? live.filter((r) => r.room === selected.room && r.status !== "done").length
     : 0;
@@ -145,6 +150,8 @@ export function DeskInbox({ initialRoom, initialOpenId }: DeskInboxProps) {
         </Chip>
       </div>
 
+      {session?.role === "Manager" ? <OnboardingChecklist /> : null}
+
       {visible.length === 0 ? (
         <div className="rounded-tile border border-line bg-surface px-6 py-14 text-center">
           <div className="text-sm font-semibold">
@@ -183,7 +190,8 @@ export function DeskInbox({ initialRoom, initialOpenId }: DeskInboxProps) {
                 <RequestCard
                   key={request.id}
                   request={request}
-                  readingLang={settings.staffLang}
+                  readingLang={readingLang}
+                  waitingAfter={waitingAfter}
                   onOpen={setSelectedId}
                 />
               ))}
@@ -195,9 +203,10 @@ export function DeskInbox({ initialRoom, initialOpenId }: DeskInboxProps) {
       {selected ? (
         <ConversationSheet
           request={selected}
-          session={session}
+          session={selectedRoom?.session ?? null}
+          guestUrl={selectedRoom?.url ?? null}
           openInRoom={openInRoom}
-          staffLang={settings.staffLang}
+          staffLang={readingLang}
           onClose={() => setSelectedId(null)}
           onStatusChange={(status) => setRequestStatus(selected, status)}
           onAssign={(assignee) => assignRequest(selected, assignee)}

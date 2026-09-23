@@ -1,6 +1,8 @@
 import { minutesAgo } from "../domain.js";
 import type { PublicRequest, RequestDoc } from "./types.js";
 
+const iso = (date: Date | null | undefined) => date?.toISOString() ?? null;
+
 export function toPublicRequest(
   doc: RequestDoc,
   now = Date.now(),
@@ -15,6 +17,12 @@ export function toPublicRequest(
     assignee: doc.assignee,
     archived: doc.archived,
     createdAt: doc.createdAt.toISOString(),
+    firstResponseAt: iso(doc.firstResponseAt),
+    progressAt: iso(doc.progressAt),
+    resolvedAt: iso(doc.resolvedAt),
+    rating: doc.rating
+      ? { ...doc.rating, at: doc.rating.at.toISOString() }
+      : null,
     minutesAgo: minutesAgo(doc.createdAt, now),
     thread: doc.thread.map((message) => ({
       ...message,

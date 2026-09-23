@@ -2,7 +2,7 @@
 
 import type { Settings } from "@/features/requests";
 import { cn } from "@/shared/lib/cn";
-import { NumberField, Switch } from "@/shared/ui";
+import { NumberField } from "@/shared/ui";
 
 import {
   PANEL_CARD,
@@ -14,12 +14,6 @@ export function SessionsPanel({ settings, onChange }: SettingsPanelProps) {
   const { sessions } = settings;
   const setSessions = (patch: Partial<Settings["sessions"]>) =>
     onChange({ sessions: { ...sessions, ...patch } });
-
-  const summary = `Right now: a room with no scans or messages for ${sessions.autoCloseHours} hours closes itself. ${
-    sessions.requireClose
-      ? "On checkout, staff close the room from the ticket menu, which archives its open tickets."
-      : "Rooms are closed only by the timer."
-  }`;
 
   return (
     <div className="animate-rise max-w-180">
@@ -33,40 +27,24 @@ export function SessionsPanel({ settings, onChange }: SettingsPanelProps) {
           <span className="min-w-48 flex-1">
             <span className="block text-sm">Auto-close after inactivity</span>
             <span className="mt-0.5 block text-[12.5px] text-faint">
-              The next scan starts a fresh session with a new guest.
+              A room with no scans or messages for this long ends its session.
+              The next scan starts a fresh one with a new guest.
             </span>
           </span>
           <NumberField
             label="Auto-close after hours"
             value={sessions.autoCloseHours}
-            max={999}
+            max={168}
             onChange={(autoCloseHours) => setSessions({ autoCloseHours })}
           />
           <span className="text-[13px] text-muted">hours</span>
         </div>
-
-        <div className="flex min-h-17 items-center gap-3.5 border-t border-line-soft py-3">
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm">
-              Require “Close room” on checkout
-            </span>
-            <span className="mt-0.5 block text-[12.5px] text-faint">
-              Staff must close the room from the ticket menu; open tickets get
-              archived.
-            </span>
-          </span>
-          <Switch
-            checked={sessions.requireClose}
-            label="Require close room on checkout"
-            onChange={() =>
-              setSessions({ requireClose: !sessions.requireClose })
-            }
-          />
-        </div>
       </div>
 
       <p className="mt-3.5 rounded-[16px] bg-sand/28 px-5 py-4 text-[12.5px] leading-relaxed text-soft">
-        {summary}
+        On checkout, staff can also end a session right away with “Guest checked
+        out” in the ticket menu or “Check out” on the Rooms page. That archives
+        the room’s open tickets so the next guest starts clean.
       </p>
     </div>
   );

@@ -3,8 +3,13 @@
 import { Check } from "lucide-react";
 import { useState } from "react";
 
-import { DISHES, type Dish } from "@/features/requests";
-import type { Phrases } from "@/shared/i18n";
+import {
+  dishName,
+  fillIn,
+  type Dish,
+  type ServiceSettings,
+} from "@/features/requests";
+import type { LangCode, Phrases } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 import { formatGel } from "@/shared/lib/money";
 
@@ -13,6 +18,8 @@ import { ScreenHeader } from "./ScreenHeader";
 
 interface RoomServiceScreenProps {
   phrases: Phrases;
+  lang: LangCode;
+  service: ServiceSettings;
   onBack: () => void;
   isSending: boolean;
   onSubmit: (dish: Dish) => void;
@@ -20,24 +27,30 @@ interface RoomServiceScreenProps {
 
 export function RoomServiceScreen({
   phrases,
+  lang,
+  service,
   onBack,
   isSending,
   onSubmit,
 }: RoomServiceScreenProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const selected = DISHES.find((dish) => dish.key === selectedKey);
+  const dishes = service.dishes.filter((dish) => dish.available);
+  const selected = dishes.find((dish) => dish.key === selectedKey);
 
   return (
     <div className="animate-rise px-5.5 pt-3.5 pb-10">
       <ScreenHeader
         backLabel={phrases.back}
         title={phrases.serviceTitle}
-        subtitle={phrases.serviceSub}
+        subtitle={fillIn(phrases.serviceSub, {
+          close: service.close,
+          minutes: String(service.deliveryMinutes),
+        })}
         onBack={onBack}
       />
 
       <div className="flex flex-col">
-        {DISHES.map((dish, index) => {
+        {dishes.map((dish, index) => {
           const on = dish.key === selectedKey;
           return (
             <button
@@ -46,17 +59,19 @@ export function RoomServiceScreen({
               onClick={() => setSelectedKey(on ? null : dish.key)}
               className={cn(
                 "flex min-h-16 cursor-pointer items-center gap-2.5 px-1 text-start",
-                index < DISHES.length - 1 && "border-b border-line",
+                index < dishes.length - 1 && "border-b border-line",
                 on && "text-sage-ink",
               )}
             >
               <span className="flex-1">
                 <span className="block text-[15.5px] font-medium">
-                  {dish.name}
+                  {dishName(dish, lang)}
                 </span>
-                <span className="mt-0.5 block text-[12.5px] text-faint">
-                  {dish.note}
-                </span>
+                {dish.note ? (
+                  <span className="mt-0.5 block text-[12.5px] text-faint">
+                    {dish.note}
+                  </span>
+                ) : null}
               </span>
               <span className="font-mono text-[13.5px] text-muted">
                 {formatGel(dish.priceTetri)}

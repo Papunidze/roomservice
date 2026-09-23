@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -19,11 +19,7 @@ interface ProblemScreenProps {
   settings: GuestSettings;
   isSending: boolean;
   onBack: () => void;
-  onSubmit: (input: {
-    keys: ProblemKey[];
-    note: string;
-    photo: boolean;
-  }) => void;
+  onSubmit: (input: { keys: ProblemKey[]; note: string }) => void;
 }
 
 export function ProblemScreen({
@@ -38,7 +34,6 @@ export function ProblemScreen({
     (key) => settings.categories[key].enabled,
   );
   const [note, setNote] = useState("");
-  const [photo, setPhoto] = useState(false);
 
   const toggleKey = (key: ProblemKey) =>
     setKeys((current) =>
@@ -92,26 +87,10 @@ export function ProblemScreen({
         className="w-full resize-none rounded-tile border border-line-strong px-4.5 py-4 text-[15.5px] leading-snug outline-none"
       />
 
-      <button
-        type="button"
-        onClick={() => setPhoto(!photo)}
-        className={cn(
-          "mt-3 flex min-h-[60px] w-full cursor-pointer items-center gap-3 rounded-tile px-5 text-start",
-          photo
-            ? "border border-sage bg-sage/7"
-            : "border border-dashed border-line-dashed",
-        )}
-      >
-        <Camera strokeWidth={1.4} className="size-5 text-sage" />
-        <span className="text-[14.5px] font-medium">
-          {photo ? phrases.photoAdded : phrases.addPhoto}
-        </span>
-      </button>
-
       <PrimaryAction
         label={phrases.send}
         enabled={!isSending && (keys.length > 0 || note.length > 0)}
-        onClick={() => onSubmit({ keys, note, photo })}
+        onClick={() => onSubmit({ keys, note })}
       />
 
       <div className="mt-4.5 flex gap-2.5 px-1">

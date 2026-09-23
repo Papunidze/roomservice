@@ -3,10 +3,12 @@ import type { ObjectId } from "mongodb";
 import type {
   ConfigurableCategory,
   LangCode,
-  RoutingGroup,
+  Plan,
   StaffRole,
   Urgency,
 } from "../domain.js";
+
+export type Translations = Partial<Record<LangCode, string>>;
 
 export interface CategorySetting {
   enabled: boolean;
@@ -18,6 +20,21 @@ export interface MenuItem {
   key: string;
   label: string;
   available: boolean;
+  translations: Translations;
+}
+
+export interface Dish {
+  key: string;
+  name: string;
+  note: string;
+  priceTetri: number;
+  available: boolean;
+  translations: Translations;
+}
+
+export interface CheckoutOption {
+  time: string;
+  surchargeTetri: number;
 }
 
 export interface Settings {
@@ -36,26 +53,38 @@ export interface Settings {
   };
   categories: Record<ConfigurableCategory, CategorySetting>;
   items: MenuItem[];
+  service: {
+    open: string;
+    close: string;
+    deliveryMinutes: number;
+    dishes: Dish[];
+  };
+  lateCheckout: CheckoutOption[];
   notifications: {
+    sound: boolean;
+    renotifyMinutes: number;
     telegram: boolean;
     group: string;
-    renotifyMinutes: number;
-    quietHours: boolean;
-    quietFrom: string;
-    quietTo: string;
   };
-  sessions: { autoCloseHours: number; requireClose: boolean };
+  sessions: { autoCloseHours: number };
 }
 
 export interface TeamConfig {
-  routing: Record<RoutingGroup, StaffRole>;
   autoAssign: boolean;
+  offShiftHours: number;
   escalation: { enabled: boolean; minutes: number; target: StaffRole };
+}
+
+export interface Billing {
+  plan: Plan;
+  trialEndsAt: Date;
+  paidUntil: Date | null;
 }
 
 export interface HotelDoc {
   _id: ObjectId;
   settings: Settings;
   team: TeamConfig;
+  billing: Billing;
   createdAt: Date;
 }

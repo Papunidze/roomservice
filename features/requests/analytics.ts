@@ -25,11 +25,14 @@ const figuresSchema = z.object({
   tickets: z.number(),
   firstResponseMinutes: z.number().nullable(),
   resolutionMinutes: z.number().nullable(),
+  rating: z.number().nullable(),
+  ratings: z.number(),
 });
 
 const analyticsSchema = z.object({
   analytics: z.object({
     range: z.enum(ANALYTICS_RANGES),
+    timezone: z.string(),
     current: figuresSchema,
     previous: figuresSchema,
     categoryTotals: z.array(
@@ -45,6 +48,15 @@ const analyticsSchema = z.object({
         category: z.enum(CATEGORIES),
         count: z.number(),
         last: z.string(),
+      }),
+    ),
+    byStaff: z.array(
+      z.object({
+        name: z.string(),
+        tickets: z.number(),
+        done: z.number(),
+        firstResponseMinutes: z.number().nullable(),
+        rating: z.number().nullable(),
       }),
     ),
     trend: z.array(

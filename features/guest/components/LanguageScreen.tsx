@@ -161,8 +161,8 @@ export function LanguageScreen({
       )}
 
       <p className="mt-auto pt-7 text-xs leading-[1.65] text-ghost">
-        No app, no account. Everything you tap is translated for the front desk;
-        anything you type is passed on as written.
+        No app, no account. Everything you tap is translated for the front desk,
+        and anything you type is translated automatically.
       </p>
     </div>
   );

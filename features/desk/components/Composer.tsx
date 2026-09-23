@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { useState } from "react";
 
 import type { GuestLanguage, Message } from "@/features/requests";
@@ -15,7 +15,7 @@ import {
 } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 
-type Reply = Pick<Message, "text" | "lang" | "translations" | "photo">;
+type Reply = Pick<Message, "text" | "lang" | "translations">;
 
 interface ComposerProps {
   guestLanguage: GuestLanguage;
@@ -36,7 +36,6 @@ export function Composer({
   const [isNote, setIsNote] = useState(false);
   const [cannedKey, setCannedKey] = useState<CannedKey | null>(null);
   const [freeText, setFreeText] = useState("");
-  const [hasPhoto, setHasPhoto] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   const draft = cannedKey ? CANNED[cannedKey][staffLang] : freeText;
@@ -53,14 +52,12 @@ export function Composer({
           text: draft.trim(),
           lang: staffLang,
           translations: cannedKey ? CANNED[cannedKey] : {},
-          photo: hasPhoto,
         });
     setIsSending(false);
     if (!isSent) return;
 
     setCannedKey(null);
     setFreeText("");
-    setHasPhoto(false);
   };
 
   return (
@@ -158,21 +155,6 @@ export function Composer({
             </span>
           ) : null}
           <span className="flex-1" />
-          {isNote ? null : (
-            <button
-              type="button"
-              onClick={() => setHasPhoto(!hasPhoto)}
-              className={cn(
-                "inline-flex min-h-8.5 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs transition-colors",
-                hasPhoto
-                  ? "border-sage text-sage-deep"
-                  : "border-line-strong text-muted",
-              )}
-            >
-              <Camera strokeWidth={1.5} className="size-3.5" />
-              {hasPhoto ? "Photo attached" : "Add photo"}
-            </button>
-          )}
           <button
             type="button"
             onClick={() => void send()}

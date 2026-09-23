@@ -19,7 +19,7 @@ const FAQS = [
   {
     question: "How does the translation work?",
     answer:
-      "Everything a guest taps — categories, items, dishes, checkout times — comes from a phrasebook written by people, and so do the quick replies. Free text is passed through as written and labelled with its language, so the desk is never shown a translation that was not actually made.",
+      "Everything a guest taps — categories, items, checkout times — comes from a phrasebook written by people, and so do the quick replies. Anything typed freely, by the guest or by your staff, is translated automatically within seconds, and the original is always shown next to the translation.",
   },
   {
     question: "Which languages are supported?",

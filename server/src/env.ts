@@ -17,6 +17,7 @@ const schema = z.object({
   TRANSLATOR: z.enum(["auto", "off"]).default("auto"),
   MYMEMORY_EMAIL: z.string().email().optional(),
   MAIL_FROM: z.string().min(1).default("RoomCall <onboarding@resend.dev>"),
+  OWNER_EMAILS: z.string().default(""),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -35,3 +36,9 @@ export const clientOrigins = env.CLIENT_ORIGIN.split(",").map((origin) =>
   origin.trim(),
 );
 export const clientOrigin = clientOrigins[0] ?? env.CLIENT_ORIGIN;
+
+export const ownerEmails = new Set(
+  env.OWNER_EMAILS.split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
+);

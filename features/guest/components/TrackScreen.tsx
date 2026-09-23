@@ -1,5 +1,6 @@
 "use client";
 
+import { Star } from "lucide-react";
 import { useState } from "react";
 
 import { isGuestVisible, resolveText, type Request } from "@/features/requests";
@@ -17,9 +18,11 @@ interface TrackScreenProps {
   request: Request;
   onBack: () => void;
   onReply: (text: string) => void;
+  onRate: (score: number) => void;
 }
 
 const STEP_INDEX = { new: 0, progress: 1, done: 2 } as const;
+const SCORES = [1, 2, 3, 4, 5];
 
 export function TrackScreen({
   phrases,
@@ -27,10 +30,21 @@ export function TrackScreen({
   request,
   onBack,
   onReply,
+  onRate,
 }: TrackScreenProps) {
   const [reply, setReply] = useState("");
   const current = STEP_INDEX[request.status];
-  const steps = [phrases.received, phrases.inProgress, phrases.done];
+  const clock = new Intl.DateTimeFormat(lang, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const at = (iso: string | null | undefined) =>
+    iso ? clock.format(new Date(iso)) : "—";
+  const steps = [
+    { label: phrases.received, at: at(request.createdAt) },
+    { label: phrases.inProgress, at: at(request.progressAt) },
+    { label: phrases.done, at: at(request.resolvedAt) },
+  ];
 
   const send = () => {
     if (!reply.trim()) return;
@@ -62,8 +76,8 @@ export function TrackScreen({
       </p>
 
       <div className="flex flex-col">
-        {steps.map((label, index) => (
-          <div key={label} className="flex gap-4">
+        {steps.map((step, index) => (
+          <div key={step.label} className="flex gap-4">
             <div className="flex flex-col items-center">
               <span
                 className={cn(
@@ -91,22 +105,48 @@ export function TrackScreen({
                   index <= current ? "text-ink" : "text-ghost",
                 )}
               >
-                {label}
+                {step.label}
               </div>
-              <div className="mt-0.5 text-[12.5px] text-ghost">
-                {index <= current ? phrases.justNow : "—"}
+              <div className="mt-0.5 font-mono text-[12.5px] text-ghost">
+                {index <= current ? step.at : "—"}
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="flex items-center justify-between rounded-tile border border-line-strong px-4.5 py-3.5">
-        <span className="text-[13px] text-muted">{phrases.etaLabel}</span>
-        <span className="text-[15px] font-semibold tracking-[-0.01em] text-sage">
-          {request.status === "done" ? phrases.done : phrases.eta}
-        </span>
-      </div>
+      {request.status === "done" ? (
+        <div className="rounded-tile border border-line-strong px-4.5 py-4">
+          <div className="text-[14px] font-medium">
+            {request.rating ? phrases.rateThanks : phrases.rateTitle}
+          </div>
+          <div className="mt-2.5 flex gap-2" dir="ltr">
+            {SCORES.map((score) => {
+              const on = (request.rating?.score ?? 0) >= score;
+              return (
+                <button
+                  key={score}
+                  type="button"
+                  disabled={
+                    request.rating !== null && request.rating !== undefined
+                  }
+                  aria-label={String(score)}
+                  onClick={() => onRate(score)}
+                  className="grid size-11 cursor-pointer place-items-center rounded-full border border-line-strong disabled:cursor-default"
+                >
+                  <Star
+                    strokeWidth={1.6}
+                    className={cn(
+                      "size-5",
+                      on ? "fill-sage text-sage" : "text-ghost",
+                    )}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-7 flex flex-col gap-3.5 border-t border-line pt-5.5">
         {request.thread.filter(isGuestVisible).map((message, index) => {
@@ -144,6 +184,7 @@ export function TrackScreen({
                         ? phrases.translated
                         : DICTIONARY[shown.lang].native
                     }`}
+                {message.at ? ` · ${at(message.at)}` : ""}
               </div>
             </div>
           );

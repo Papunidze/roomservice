@@ -16,7 +16,6 @@ describe("problemRequest", () => {
     const request = problemRequest(arabicGuest, {
       keys: ["wifi", "noise"],
       note: "",
-      photo: false,
     });
 
     expect(request.category).toBe("wifi");
@@ -26,7 +25,6 @@ describe("problemRequest", () => {
     const request = problemRequest(arabicGuest, {
       keys: [],
       note: "المكيف",
-      photo: false,
     });
 
     expect(request.category).toBe("other");
@@ -34,16 +32,13 @@ describe("problemRequest", () => {
 
   it("marks AC and hot water as high urgency", () => {
     expect(
-      problemRequest(arabicGuest, { keys: ["ac"], note: "", photo: false })
-        .urgency,
+      problemRequest(arabicGuest, { keys: ["ac"], note: "" }).urgency,
     ).toBe("high");
     expect(
-      problemRequest(arabicGuest, { keys: ["water"], note: "", photo: false })
-        .urgency,
+      problemRequest(arabicGuest, { keys: ["water"], note: "" }).urgency,
     ).toBe("high");
     expect(
-      problemRequest(arabicGuest, { keys: ["tv"], note: "", photo: false })
-        .urgency,
+      problemRequest(arabicGuest, { keys: ["tv"], note: "" }).urgency,
     ).toBe("medium");
   });
 
@@ -51,19 +46,17 @@ describe("problemRequest", () => {
     const [message] = problemRequest(arabicGuest, {
       keys: ["ac"],
       note: "very hot",
-      photo: true,
     }).thread;
 
     expect(message?.text).toBe("التكييف — very hot");
     expect(message?.translations.en).toBe("AC — very hot");
     expect(message?.translations.ka).toBe("კონდიციონერი — very hot");
-    expect(message?.photo).toBe(true);
   });
 
   it("writes the guest message in the guest language", () => {
     const [message] = problemRequest(
       { room: "205", language: guestLanguage("tr") },
-      { keys: ["noise"], note: "", photo: false },
+      { keys: ["noise"], note: "" },
     ).thread;
 
     expect(message?.lang).toBe("tr");
@@ -71,7 +64,12 @@ describe("problemRequest", () => {
   });
 });
 
-const catalogueItem = (key: string) => ({ key, label: key, available: true });
+const catalogueItem = (key: string) => ({
+  key,
+  label: key,
+  available: true,
+  translations: {},
+});
 
 describe("itemsRequest", () => {
   it("translates catalogue items into every language", () => {
@@ -84,16 +82,37 @@ describe("itemsRequest", () => {
     expect(message?.translations.ru).toBe("Полотенца ×2, Утюг ×1");
   });
 
-  it("passes items added in settings through untranslated", () => {
+  it("passes items added in settings through as typed until translated", () => {
     const [message] = itemsRequest(arabicGuest, [
       {
-        item: { key: "custom-yoga-mat", label: "Yoga mat", available: true },
+        item: {
+          key: "custom-yoga-mat",
+          label: "Yoga mat",
+          available: true,
+          translations: {},
+        },
         count: 1,
       },
     ]).thread;
 
     expect(message?.translations.en).toBe("Yoga mat ×1");
     expect(message?.translations.ru).toBe("Yoga mat ×1");
+  });
+
+  it("uses the saved translation of a custom item when there is one", () => {
+    const [message] = itemsRequest(arabicGuest, [
+      {
+        item: {
+          key: "custom-yoga-mat",
+          label: "Yoga mat",
+          available: true,
+          translations: { ru: "Коврик для йоги" },
+        },
+        count: 1,
+      },
+    ]).thread;
+
+    expect(message?.translations.ru).toBe("Коврик для йоги ×1");
   });
 
   it("is always a low-urgency item request", () => {
@@ -113,6 +132,8 @@ describe("serviceRequest", () => {
       name: "Chicken soup",
       note: "Served hot",
       priceTetri: 1500,
+      available: true,
+      translations: {},
     }).thread;
 
     expect(message?.translations.en).toBe("Chicken soup — 15 ₾");
@@ -139,7 +160,6 @@ describe("free text flag", () => {
     const draft = problemRequest(base, {
       keys: ["ac"],
       note: "loud",
-      photo: false,
     });
     expect(draft.thread[0]?.freeText).toBe(true);
   });
@@ -148,7 +168,6 @@ describe("free text flag", () => {
     const draft = problemRequest(base, {
       keys: ["ac"],
       note: "  ",
-      photo: false,
     });
     expect(draft.thread[0]?.freeText).toBe(false);
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { Link2, LogOut, MoreHorizontal, X } from "lucide-react";
+import { Link2, LogOut, MoreHorizontal, Star, X } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -24,6 +24,7 @@ const MENU_ITEM =
 interface ConversationHeaderProps {
   request: Request;
   session: GuestSession | null;
+  guestUrl: string | null;
   openInRoom: number;
   staffLang: LangCode;
   assignees: string[];
@@ -36,6 +37,7 @@ interface ConversationHeaderProps {
 export function ConversationHeader({
   request,
   session,
+  guestUrl,
   openInRoom,
   staffLang,
   assignees,
@@ -64,6 +66,15 @@ export function ConversationHeader({
           </span>
         ) : null}
         <StatusPill status={request.status} />
+        {request.rating ? (
+          <span
+            title={request.rating.comment || undefined}
+            className="flex items-center gap-1 rounded-full bg-sage/10 px-2.5 py-1 text-[12px] font-medium text-sage-deep"
+          >
+            <Star strokeWidth={2} className="size-3 fill-sage-deep" />
+            {request.rating.score}/5 from the guest
+          </span>
+        ) : null}
 
         <span className="flex w-full flex-wrap items-center gap-2 md:ml-auto md:w-auto">
           <label className="flex min-h-9.5 cursor-pointer items-center gap-2 rounded-full border border-line-strong pr-2 pl-2">
@@ -137,11 +148,20 @@ export function ConversationHeader({
           <div className="animate-rise absolute top-14.5 right-4 z-50 w-75 max-w-[calc(100vw-2rem)] rounded-tile border border-line-strong bg-surface p-1.5 md:right-7.5">
             <button
               type="button"
+              disabled={!guestUrl}
               onClick={() => {
                 setIsMenuOpen(false);
-                showToast(`Guest link copied · room ${request.room}`);
+                if (!guestUrl) return;
+                void navigator.clipboard.writeText(guestUrl).then(
+                  () => showToast(`Guest link copied · room ${request.room}`),
+                  () =>
+                    showToast("Could not copy. Open Rooms to see the link."),
+                );
               }}
-              className={cn(MENU_ITEM, "items-center text-[13px]")}
+              className={cn(
+                MENU_ITEM,
+                "items-center text-[13px] disabled:cursor-default disabled:opacity-40",
+              )}
             >
               <Link2 strokeWidth={1.5} className="size-[15px] text-muted" />
               Copy guest link

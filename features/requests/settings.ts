@@ -3,6 +3,8 @@ import { DICTIONARY, type LangCode } from "@/shared/i18n";
 import { isItemKey, type ConfigurableCategory } from "./catalog";
 import type { StaffRole, Urgency } from "./types";
 
+export type Translations = Partial<Record<LangCode, string>>;
+
 export interface HotelProfile {
   name: string;
   address: string;
@@ -29,24 +31,47 @@ export interface MenuItem {
   key: string;
   label: string;
   available: boolean;
+  translations: Translations;
 }
 
 export function itemLabel(item: MenuItem, lang: LangCode) {
-  return isItemKey(item.key) ? DICTIONARY[lang][item.key] : item.label;
+  if (isItemKey(item.key)) return DICTIONARY[lang][item.key];
+  return item.translations[lang] ?? item.label;
+}
+
+export interface Dish {
+  key: string;
+  name: string;
+  note: string;
+  priceTetri: number;
+  available: boolean;
+  translations: Translations;
+}
+
+export const dishName = (dish: Dish, lang: LangCode) =>
+  dish.translations[lang] ?? dish.name;
+
+export interface ServiceSettings {
+  open: string;
+  close: string;
+  deliveryMinutes: number;
+  dishes: Dish[];
+}
+
+export interface CheckoutOption {
+  time: string;
+  surchargeTetri: number;
 }
 
 export interface NotificationSettings {
+  sound: boolean;
+  renotifyMinutes: number;
   telegram: boolean;
   group: string;
-  renotifyMinutes: number;
-  quietHours: boolean;
-  quietFrom: string;
-  quietTo: string;
 }
 
 export interface SessionSettings {
   autoCloseHours: number;
-  requireClose: boolean;
 }
 
 export interface Settings {
@@ -58,11 +83,22 @@ export interface Settings {
   info: GuestInfo;
   categories: Record<ConfigurableCategory, CategorySetting>;
   items: MenuItem[];
+  service: ServiceSettings;
+  lateCheckout: CheckoutOption[];
   notifications: NotificationSettings;
   sessions: SessionSettings;
 }
 
 export type GuestSettings = Pick<
   Settings,
-  "guestLanguages" | "info" | "infoSourceLang" | "categories" | "items"
+  | "guestLanguages"
+  | "info"
+  | "infoSourceLang"
+  | "categories"
+  | "items"
+  | "service"
+  | "lateCheckout"
 > & { hotel: Pick<HotelProfile, "name" | "checkout"> };
+
+export const fillIn = (template: string, values: Record<string, string>) =>
+  template.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? "");

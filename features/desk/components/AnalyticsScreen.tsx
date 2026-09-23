@@ -15,6 +15,7 @@ import {
   useRequests,
   type AnalyticsRange,
 } from "@/features/requests";
+import { useTeam } from "@/features/team";
 import { cn } from "@/shared/lib/cn";
 import { formatWhen } from "@/shared/lib/time";
 import { Button } from "@/shared/ui";
@@ -32,16 +33,26 @@ const CARD = "rounded-tile border border-line bg-surface px-6 py-5.5";
 const REPEAT_GRID =
   "grid min-w-[640px] grid-cols-[90px_1fr_120px_160px_120px] items-center gap-3";
 
+const STAFF_GRID =
+  "grid min-w-[560px] grid-cols-[1.4fr_100px_100px_150px_110px] items-center gap-3";
+
+const formatRating = (rating: number | null) =>
+  rating === null ? "—" : `${rating.toFixed(1)} / 5`;
+
 export function AnalyticsScreen() {
   const requests = useRequests();
+  const team = useTeam();
   const router = useRouter();
   const [range, setRange] = useState<AnalyticsRange>("7d");
   const data = useAnalytics(range);
   const { label } = RANGE_LABEL[range];
 
+  const waitingAfter = team.escalation.minutes;
   const overdue = requests.filter(
     (request) =>
-      !request.archived && request.status !== "done" && request.minutesAgo > 15,
+      !request.archived &&
+      request.status !== "done" &&
+      request.minutesAgo > waitingAfter,
   ).length;
 
   const current = data?.current;
@@ -78,7 +89,15 @@ export function AnalyticsScreen() {
       alert: false,
     },
     {
-      label: "Open > 15 min",
+      label: "Guest rating",
+      value: formatRating(current?.rating ?? null),
+      delta: current
+        ? `${current.ratings} rating${current.ratings === 1 ? "" : "s"} ${label}`
+        : "no comparison yet",
+      alert: false,
+    },
+    {
+      label: `Open > ${waitingAfter} min`,
       value: String(overdue),
       delta: overdue > 0 ? "needs attention" : "all answered",
       alert: overdue > 0,
@@ -93,7 +112,7 @@ export function AnalyticsScreen() {
             Analytics
           </div>
           <div className="mt-0.5 text-[12.5px] text-faint">
-            {data ? `Figures for ${label}` : "Loading…"}
+            {data ? `Figures for ${label} · ${data.timezone}` : "Loading…"}
           </div>
         </div>
         <span className="flex-1" />
@@ -118,7 +137,7 @@ export function AnalyticsScreen() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-5">
         {tiles.map((tile) => (
           <div key={tile.label} className={cn(CARD, "px-5 py-4.5")}>
             <div className="font-mono text-[10px] tracking-[0.14em] text-ghost uppercase">
@@ -162,6 +181,52 @@ export function AnalyticsScreen() {
             <div className={CARD}>
               <LanguageMix entries={data.languageMix} />
             </div>
+          </div>
+
+          <div className={cn(CARD, "scrollbar-slim mt-3.5 overflow-x-auto")}>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="text-base font-semibold tracking-[-0.02em]">
+                By team member
+              </span>
+              <span className="text-xs text-faint">
+                Tickets assigned {label}
+              </span>
+            </div>
+            <div
+              className={cn(
+                STAFF_GRID,
+                "pt-3.5 pb-2 font-mono text-[10px] tracking-[0.12em] text-ghost uppercase",
+              )}
+            >
+              <span>Member</span>
+              <span>Tickets</span>
+              <span>Done</span>
+              <span>Avg first response</span>
+              <span>Rating</span>
+            </div>
+            {data.byStaff.length === 0 ? (
+              <p className="border-t border-line-soft py-4 text-[13px] text-faint">
+                No ticket was assigned {label}.
+              </p>
+            ) : null}
+            {data.byStaff.map((row) => (
+              <div
+                key={row.name}
+                className={cn(STAFF_GRID, "min-h-12 border-t border-line-soft")}
+              >
+                <span className="text-[13.5px] font-medium">{row.name}</span>
+                <span className="font-mono text-xs text-muted">
+                  {row.tickets}
+                </span>
+                <span className="font-mono text-xs text-muted">{row.done}</span>
+                <span className="font-mono text-xs text-muted">
+                  {formatMinutes(row.firstResponseMinutes)}
+                </span>
+                <span className="font-mono text-xs text-muted">
+                  {formatRating(row.rating)}
+                </span>
+              </div>
+            ))}
           </div>
 
           <div className={cn(CARD, "scrollbar-slim mt-3.5 overflow-x-auto")}>

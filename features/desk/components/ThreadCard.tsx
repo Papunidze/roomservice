@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, User } from "lucide-react";
+import { User } from "lucide-react";
 
 import {
   resolveText,
@@ -107,13 +107,6 @@ export function ThreadCard({
 
       {pending ? (
         <div className="mt-2.5 text-[12px] text-faint">{pending}</div>
-      ) : null}
-
-      {message.photo ? (
-        <div className="mt-3 flex items-center gap-2 text-[12.5px] text-muted">
-          <Camera strokeWidth={1.5} className="size-4" />
-          Photo attached
-        </div>
       ) : null}
     </div>
   );

@@ -24,10 +24,16 @@ export const STAFF_ROLES = [
   "Front desk",
   "Housekeeping",
   "Maintenance",
+  "Kitchen",
+  "Supervisor",
   "Manager",
 ] as const;
 
 export type StaffRole = (typeof STAFF_ROLES)[number];
+
+export const ADMIN_ROLES: readonly string[] = ["Manager", "Supervisor"];
+
+export const isAdminRole = (role: string) => ADMIN_ROLES.includes(role);
 
 export const UNASSIGNED = "Unassigned";
 
@@ -49,9 +55,15 @@ export interface Message {
   lang: LangCode;
   text: string;
   translations: Partial<Record<LangCode, string>>;
-  photo?: boolean;
   freeText?: boolean;
+  at?: string;
   minutesAgo: number;
+}
+
+export interface Rating {
+  score: number;
+  comment: string;
+  at: string;
 }
 
 export interface Request {
@@ -65,6 +77,10 @@ export interface Request {
   assignee: string;
   archived?: boolean;
   createdAt?: string;
+  firstResponseAt?: string | null;
+  progressAt?: string | null;
+  resolvedAt?: string | null;
+  rating?: Rating | null;
   thread: Message[];
 }
 

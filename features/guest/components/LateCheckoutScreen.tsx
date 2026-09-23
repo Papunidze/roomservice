@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { CHECKOUT_OPTIONS, type CheckoutOption } from "@/features/requests";
+import type { CheckoutOption } from "@/features/requests";
 import type { Phrases } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 import { formatGel } from "@/shared/lib/money";
@@ -12,6 +12,7 @@ import { ScreenHeader } from "./ScreenHeader";
 
 interface LateCheckoutScreenProps {
   phrases: Phrases;
+  options: CheckoutOption[];
   onBack: () => void;
   isSending: boolean;
   onSubmit: (option: CheckoutOption) => void;
@@ -19,14 +20,13 @@ interface LateCheckoutScreenProps {
 
 export function LateCheckoutScreen({
   phrases,
+  options,
   onBack,
   isSending,
   onSubmit,
 }: LateCheckoutScreenProps) {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const selected = CHECKOUT_OPTIONS.find(
-    (option) => option.time === selectedTime,
-  );
+  const selected = options.find((option) => option.time === selectedTime);
 
   return (
     <div className="animate-rise px-5.5 pt-3.5 pb-10">
@@ -38,7 +38,7 @@ export function LateCheckoutScreen({
       />
 
       <div className="flex flex-col gap-2.5">
-        {CHECKOUT_OPTIONS.map((option) => {
+        {options.map((option) => {
           const on = option.time === selectedTime;
           return (
             <button

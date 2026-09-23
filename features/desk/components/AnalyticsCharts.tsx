@@ -8,9 +8,6 @@ import {
 import { DICTIONARY } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
 
-const SHIFT_START = 8;
-const SHIFT_END = 22;
-
 const MIX_FILL = [
   "bg-sage",
   "bg-sage-deep",
@@ -84,9 +81,8 @@ export function HourChart({ hours }: { hours: number[] }) {
             title={`${String(hour).padStart(2, "0")}:00 · ${value} tickets`}
             style={{ height: `${Math.round((value / peak) * 100)}%` }}
             className={cn(
-              "flex-1 rounded-t-[4px] rounded-b-[2px]",
-              hour >= SHIFT_START && hour < SHIFT_END ? "bg-sage" : "bg-sand",
-              hour === peakHour ? "opacity-100" : "opacity-80",
+              "flex-1 rounded-t-[4px] rounded-b-[2px] bg-sage",
+              hour === peakHour ? "opacity-100" : "opacity-70",
             )}
           />
         ))}
@@ -95,12 +91,6 @@ export function HourChart({ hours }: { hours: number[] }) {
         {["00", "06", "12", "18", "23"].map((tick) => (
           <span key={tick}>{tick}</span>
         ))}
-      </div>
-      <div className="mt-3.5 flex items-center gap-2.5 text-xs text-faint">
-        <span className="size-2.5 rounded-[3px] bg-sage" />
-        <span>Shift hours 08–22</span>
-        <span className="ml-2 size-2.5 rounded-[3px] bg-sand" />
-        <span>Night · escalation active</span>
       </div>
     </>
   );

@@ -19,7 +19,6 @@ export const createRequestSchema = z.object({
   language: guestLanguageSchema,
   text: z.string().trim().min(1, "Say what you need").max(2000),
   translations: translations.default({}),
-  photo: z.boolean().default(false),
   freeText: z.boolean().default(false),
 });
 
@@ -28,11 +27,15 @@ export const guestMessageSchema = z.object({
   lang: langCodeSchema,
 });
 
+export const ratingSchema = z.object({
+  score: z.number().int().min(1).max(5),
+  comment: z.string().trim().max(500).default(""),
+});
+
 export const staffReplySchema = z.object({
   text: z.string().trim().min(1, "Write a reply").max(2000),
   lang: langCodeSchema,
   translations: translations.default({}),
-  photo: z.boolean().default(false),
 });
 
 export const noteSchema = z.object({
@@ -48,4 +51,10 @@ export const requestPatchSchema = z
 
 export const listQuerySchema = z.object({
   since: z.iso.datetime().optional(),
+});
+
+export const historyQuerySchema = z.object({
+  q: z.string().trim().max(80).default(""),
+  before: z.iso.datetime().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
 });

@@ -19,8 +19,8 @@ export interface UserDoc {
   email: string;
   role: StaffRole;
   lang: LangCode;
-  telegram: boolean;
   onShift: boolean;
+  onShiftAt: Date | null;
   lastActiveAt: Date | null;
   passwordHash?: string;
   googleId?: string;
@@ -36,5 +36,7 @@ export interface PublicUser {
   email: string;
   hotel: string;
   role: StaffRole;
+  lang: LangCode;
+  isOwner: boolean;
   twoFactorEnabled: boolean;
 }

@@ -1,8 +1,6 @@
 "use client";
 
-import { Hotel } from "lucide-react";
-
-import { TIMEZONES, type Settings } from "@/features/requests";
+import type { Settings } from "@/features/requests";
 import {
   DICTIONARY,
   LANGUAGES,
@@ -10,14 +8,7 @@ import {
   type LangCode,
 } from "@/shared/i18n";
 import { cn } from "@/shared/lib/cn";
-import {
-  Field,
-  FIELD_CONTROL,
-  Flag,
-  showToast,
-  Switch,
-  TextField,
-} from "@/shared/ui";
+import { Field, FIELD_CONTROL, Flag, Switch, TextField } from "@/shared/ui";
 
 import {
   PANEL_CARD,
@@ -25,8 +16,24 @@ import {
   type SettingsPanelProps,
 } from "./PanelHeading";
 
+const timezones = () => {
+  const all =
+    typeof Intl.supportedValuesOf === "function"
+      ? Intl.supportedValuesOf("timeZone")
+      : ["Asia/Tbilisi"];
+  return all.filter((zone) => zone.includes("/"));
+};
+
+const offsetOf = (zone: string) =>
+  new Intl.DateTimeFormat("en", { timeZone: zone, timeZoneName: "shortOffset" })
+    .formatToParts(new Date())
+    .find((part) => part.type === "timeZoneName")?.value ?? "";
+
 export function HotelProfilePanel({ settings, onChange }: SettingsPanelProps) {
   const { hotel } = settings;
+  const zones = timezones().includes(hotel.timezone)
+    ? timezones()
+    : [hotel.timezone, ...timezones()];
   const setHotel = (patch: Partial<Settings["hotel"]>) =>
     onChange({ hotel: { ...hotel, ...patch } });
 
@@ -37,22 +44,7 @@ export function HotelProfilePanel({ settings, onChange }: SettingsPanelProps) {
         subtitle="Shown on QR plates and the guest page header."
       />
 
-      <div
-        className={cn(
-          PANEL_CARD,
-          "mt-5.5 grid gap-5 p-5 sm:grid-cols-[96px_1fr] sm:p-6",
-        )}
-      >
-        <button
-          type="button"
-          onClick={() =>
-            showToast("Logo upload · PNG or SVG, square, min 256 px")
-          }
-          className="grid size-24 cursor-pointer place-items-center rounded-tile border border-dashed border-line-dashed bg-paper"
-        >
-          <Hotel strokeWidth={1.4} className="size-6.5" />
-        </button>
-
+      <div className={cn(PANEL_CARD, "mt-5.5 p-5 sm:p-6")}>
         <div className="grid gap-3.5 sm:grid-cols-2">
           <TextField
             label="Hotel name"
@@ -72,9 +64,9 @@ export function HotelProfilePanel({ settings, onChange }: SettingsPanelProps) {
               onChange={(event) => setHotel({ timezone: event.target.value })}
               className={cn(FIELD_CONTROL, "cursor-pointer")}
             >
-              {TIMEZONES.map((zone) => (
+              {zones.map((zone) => (
                 <option key={zone} value={zone}>
-                  {zone}
+                  {zone} ({offsetOf(zone)})
                 </option>
               ))}
             </select>

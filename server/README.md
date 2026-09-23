@@ -67,13 +67,24 @@ hotel. Responses wrap their payload (`{ settings }`, `{ rooms }`, `{ request }`,
 | DELETE | `/api/team/members/:id`   | —                                        | 204                                                  |
 | GET    | `/api/analytics`          | `?range=today\|7d\|30d`                  | `{analytics}` computed from requests                 |
 
-**Roles.** Every signed-in member can read settings, rooms, team and
-requests and can work the inbox (reply, note, assign, status). Everything that
-changes the hotel — settings, rooms, team, plus the analytics page — needs the
-`Manager` role (`requireManager`) and answers 403 otherwise. Registration
-creates a Manager; invited members get the role chosen in the invite.
-
+| GET | `/api/requests/history` | `?q=&before=<iso>&limit=` | `{requests, hasMore}` newest first, archived included |
+| GET | `/api/billing` | — | `{billing: {plan, status, trialEndsAt, paidUntil, daysLeft, rooms}}` |
 | DELETE | `/api/rooms` | `numbers: string[]` | `{rooms}`; open requests of those rooms are archived |
+| GET | `/api/admin/hotels` | — | owner only: every hotel with plan, trial and activity |
+| PATCH | `/api/admin/hotels/:id` | `plan?`, `trialEndsAt?`, `paidUntil?` | owner only: `{hotel}` |
+
+**Roles.** Every signed-in member can read settings, rooms, team and
+requests and can work the inbox (reply, note, assign, status, check a guest
+out). Rooms, team and analytics need `Manager` or `Supervisor`
+(`requireAdminRole`); settings need `Manager`. `/api/admin` needs an email
+listed in `OWNER_EMAILS`. Registration creates a Manager; invited members get
+the role chosen in the invite.
+
+**Billing.** A hotel starts on a 30-day trial; hotels created before billing
+existed get a fresh 30-day trial the first time they are loaded. When the trial or the paid
+period has ended, every write route answers 402 `subscription_expired`
+(`writesRequireActive`); reads and guest routes keep working. Plans are
+switched by the operator in `/admin`.
 
 ## Guest API
 
@@ -141,11 +152,26 @@ are users of the same hotel. Legacy users without a hotel are attached to a
 fresh one on startup (`jobs/migrate.ts`).
 
 **Server-side desk rules.** A staff reply marks first response, takes the
-ticket when unassigned and moves `new → progress`; assigning does the same;
-`done` stamps `resolvedAt`. Creating a request applies the hotel's per-category
+ticket when unassigned and moves `new → progress` (stamping `progressAt`);
+assigning does the same; `done` stamps `resolvedAt`, after which the guest may
+rate the request once. Creating a request applies the hotel's per-category
 urgency and, when auto-assign is on, hands it to the most recently active
-on-shift member of the routed role. A one-minute job appends an escalation
-line to requests still `new` past the configured minutes.
+on-shift member of the category's role. The inbox list holds open tickets plus
+tickets finished in the last 7 days; everything else is served by `/history`.
+
+**Scheduler.** A one-minute job (`jobs/scheduler.ts`) escalates requests still
+`new` past the configured minutes (thread line + email to every member of the
+target role), closes guest sessions idle longer than `sessions.autoCloseHours`,
+and takes members off shift after `team.offShiftHours`.
+
+**Translation.** Guest text is translated in the background into the hotel's
+team language, English and every member's own language; staff replies into the
+guest's language. Custom item and dish names are translated once when settings
+are saved (`hotels/translate-catalog.ts`). Claude when `ANTHROPIC_API_KEY` is
+set, MyMemory otherwise, `TRANSLATOR=off` to disable.
+
+**Rate limits.** `/api/auth/*` allows 30 requests per 15 minutes per IP; guest
+POSTs allow 60 per hour per IP and plate token.
 
 **Live updates** are Server-Sent Events fanned out per hotel from an in-process
 emitter, so they work on one instance; put a broker (Redis pub/sub) behind
@@ -153,6 +179,6 @@ emitter, so they work on one instance; put a broker (Redis pub/sub) behind
 
 ## Not here yet
 
-Rate limiting, email verification, refresh-token rotation, photo upload for
-requests, Telegram delivery (the settings are stored, nothing is sent), and
-eslint for this package.
+Email verification, refresh-token rotation, photo upload for requests,
+Telegram delivery (the group is stored, nothing is sent), and eslint for this
+package.

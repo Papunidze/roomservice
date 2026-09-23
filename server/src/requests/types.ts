@@ -23,7 +23,12 @@ export interface MessageDoc {
   lang: LangCode;
   text: string;
   translations: Partial<Record<LangCode, string>>;
-  photo?: boolean;
+  at: Date;
+}
+
+export interface Rating {
+  score: number;
+  comment: string;
   at: Date;
 }
 
@@ -40,7 +45,9 @@ export interface RequestDoc {
   archived: boolean;
   escalatedAt: Date | null;
   firstResponseAt: Date | null;
+  progressAt: Date | null;
   resolvedAt: Date | null;
+  rating: Rating | null;
   createdAt: Date;
   updatedAt: Date;
   thread: MessageDoc[];
@@ -61,6 +68,10 @@ export interface PublicRequest {
   assignee: string;
   archived: boolean;
   createdAt: string;
+  firstResponseAt: string | null;
+  progressAt: string | null;
+  resolvedAt: string | null;
+  rating: { score: number; comment: string; at: string } | null;
   minutesAgo: number;
   thread: PublicMessage[];
 }

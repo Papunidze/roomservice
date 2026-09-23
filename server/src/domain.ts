@@ -61,21 +61,22 @@ export const STAFF_ROLES = [
   "Front desk",
   "Housekeeping",
   "Maintenance",
+  "Kitchen",
+  "Supervisor",
   "Manager",
 ] as const;
 
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
+export const ADMIN_ROLES: readonly StaffRole[] = ["Manager", "Supervisor"];
+
 export const MESSAGE_KINDS = ["guest", "staff", "system", "note"] as const;
 export type MessageKind = (typeof MESSAGE_KINDS)[number];
 
-export const ROUTING_GROUPS = {
-  maintenance: ["ac", "water", "wifi", "tv"],
-  housekeeping: ["cleaning", "items"],
-  frontDesk: ["noise", "service", "checkout", "other"],
-} as const satisfies Record<string, readonly Category[]>;
+export const PLANS = ["trial", "standard", "pro", "enterprise"] as const;
+export type Plan = (typeof PLANS)[number];
 
-export type RoutingGroup = keyof typeof ROUTING_GROUPS;
+export const TRIAL_DAYS = 30;
 
 export const ITEM_KEYS = [
   "towels",
@@ -99,19 +100,20 @@ export const CATEGORY_DEFAULT: Record<
   noise: { urgency: "medium", role: "Front desk" },
   cleaning: { urgency: "medium", role: "Housekeeping" },
   items: { urgency: "low", role: "Housekeeping" },
-  service: { urgency: "medium", role: "Front desk" },
+  service: { urgency: "medium", role: "Kitchen" },
   checkout: { urgency: "medium", role: "Front desk" },
   info: { urgency: "low", role: "Front desk" },
   other: { urgency: "medium", role: "Front desk" },
 };
 
-export function routingGroupFor(category: Category): RoutingGroup | null {
-  for (const [group, categories] of Object.entries(ROUTING_GROUPS)) {
-    if ((categories as readonly Category[]).includes(category))
-      return group as RoutingGroup;
-  }
-  return null;
-}
-
 export const minutesAgo = (date: Date, now = Date.now()) =>
   Math.max(0, Math.round((now - date.getTime()) / 60_000));
+
+export function isTimezone(value: string) {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+}

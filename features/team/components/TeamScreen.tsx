@@ -4,23 +4,22 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import { useSession } from "@/features/auth";
+import { useSettings } from "@/features/requests";
 import { Button } from "@/shared/ui";
 
 import { useTeam } from "../store";
+import { AssignmentCard } from "./AssignmentCard";
 import { EscalationCard } from "./EscalationCard";
 import { InviteModal } from "./InviteModal";
-import { RoutingCard } from "./RoutingCard";
 import { TeamTable } from "./TeamTable";
 
 export function TeamScreen() {
   const team = useTeam();
+  const settings = useSettings();
   const currentEmail = useSession()?.email ?? "";
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   const onShift = team.members.filter((member) => member.onShift).length;
-  const withoutTelegram = team.members.filter(
-    (member) => !member.telegram,
-  ).length;
 
   return (
     <div className="scrollbar-slim px-4 pt-5 pb-8 md:h-[min(860px,calc(100dvh-8rem))] md:min-h-[560px] md:overflow-y-auto md:px-7 md:pt-6">
@@ -30,8 +29,8 @@ export function TeamScreen() {
             Team
           </div>
           <div className="mt-0.5 text-[12.5px] text-faint">
-            {team.members.length} members · {onShift} on shift ·{" "}
-            {withoutTelegram} without Telegram
+            {team.members.length} member{team.members.length === 1 ? "" : "s"} ·{" "}
+            {onShift} on shift
           </div>
         </div>
         <span className="flex-1" />
@@ -44,12 +43,15 @@ export function TeamScreen() {
       <TeamTable members={team.members} currentEmail={currentEmail} />
 
       <div className="mt-4.5 grid gap-4.5 lg:grid-cols-[1.3fr_1fr]">
-        <RoutingCard team={team} />
+        <AssignmentCard team={team} />
         <EscalationCard team={team} />
       </div>
 
       {isInviteOpen ? (
-        <InviteModal onClose={() => setIsInviteOpen(false)} />
+        <InviteModal
+          defaultLang={settings.staffLang}
+          onClose={() => setIsInviteOpen(false)}
+        />
       ) : null}
     </div>
   );

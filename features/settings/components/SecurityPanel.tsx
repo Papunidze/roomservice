@@ -17,10 +17,15 @@ import { PANEL_CARD, PanelHeading } from "./PanelHeading";
 const ROLE_RULES = [
   {
     role: "Manager",
-    access: "Everything: inbox, rooms, team, analytics and settings.",
+    access:
+      "Everything: inbox, history, rooms, team, analytics, settings and billing.",
   },
   {
-    role: "Front desk, Housekeeping, Maintenance",
+    role: "Supervisor",
+    access: "Everything except settings and billing.",
+  },
+  {
+    role: "Front desk, Housekeeping, Maintenance, Kitchen",
     access: "The inbox only. They reply, add notes, assign and close requests.",
   },
 ];

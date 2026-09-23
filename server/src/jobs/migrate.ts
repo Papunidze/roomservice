@@ -1,6 +1,6 @@
 import type { ObjectId } from "mongodb";
 
-import { users } from "../db.js";
+import { hotels, users } from "../db.js";
 import { createHotel } from "../hotels/service.js";
 
 interface LegacyUser {
@@ -23,9 +23,9 @@ export async function migrateLegacyUsers() {
         $set: {
           hotelId: hotel._id,
           role: "Manager",
-          lang: "en",
-          telegram: false,
+          lang: hotel.settings.staffLang,
           onShift: true,
+          onShiftAt: new Date(),
           lastActiveAt: null,
         },
         $unset: { hotel: "" },
@@ -34,4 +34,29 @@ export async function migrateLegacyUsers() {
   }
   if (legacy.length > 0)
     console.log(`[migrate] attached ${legacy.length} user(s) to new hotels`);
+}
+
+export async function migrateReaderLanguages() {
+  const all = await hotels()
+    .find({}, { projection: { "settings.staffLang": 1 } })
+    .toArray();
+  let migrated = 0;
+  for (const hotel of all) {
+    const result = await users().updateMany(
+      { hotelId: hotel._id, onShiftAt: { $exists: false } },
+      [
+        {
+          $set: {
+            lang: hotel.settings.staffLang,
+            onShiftAt: { $cond: ["$onShift", "$$NOW", null] },
+          },
+        },
+      ],
+    );
+    migrated += result.modifiedCount;
+  }
+  if (migrated > 0)
+    console.log(
+      `[migrate] set the reading language of ${migrated} member(s) to their hotel's team language`,
+    );
 }

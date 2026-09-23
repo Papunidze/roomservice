@@ -18,6 +18,8 @@ const plateSchema = z.object({
   infoSourceLang: settingsSchema.shape.infoSourceLang,
   categories: settingsSchema.shape.categories,
   items: settingsSchema.shape.items,
+  service: settingsSchema.shape.service,
+  lateCheckout: settingsSchema.shape.lateCheckout,
 });
 
 export type Plate = z.infer<typeof plateSchema>;
@@ -47,7 +49,6 @@ export function createGuestRequest(token: string, draft: Omit<Request, "id">) {
       language: draft.language,
       text: first?.text ?? "",
       translations: first?.translations ?? {},
-      photo: first?.photo ?? false,
       freeText: first?.freeText ?? false,
     },
     oneRequest,
@@ -59,6 +60,12 @@ export const sendGuestMessage = (
   id: number,
   message: { text: string; lang: string },
 ) => apiPost(`${base(token)}/requests/${id}/messages`, message, oneRequest);
+
+export const rateGuestRequest = (
+  token: string,
+  id: number,
+  rating: { score: number; comment: string },
+) => apiPost(`${base(token)}/requests/${id}/rating`, rating, oneRequest);
 
 export function watchRoom(token: string, onChange: () => void) {
   const source = new EventSource(`${base(token)}/events`);

@@ -5,19 +5,20 @@ import { ArrowRight, Globe, Hotel, TriangleAlert } from "lucide-react";
 import {
   CATEGORY_ICON,
   CATEGORY_LABEL,
+  fillIn,
   type GuestSettings,
   type Request,
   type Status,
 } from "@/features/requests";
 import type { Phrases } from "@/shared/i18n";
 
+import type { GuestScreen } from "../screens";
+
 const STATUS_PHRASE: Record<Status, keyof Phrases> = {
   new: "received",
   progress: "inProgress",
   done: "done",
 };
-
-import type { GuestScreen } from "../screens";
 
 interface HomeScreenProps {
   room: string;
@@ -49,7 +50,7 @@ export function HomeScreen({
       screen: "service",
       category: "service",
       title: phrases.serviceT,
-      sub: phrases.serviceS,
+      sub: fillIn(phrases.serviceS, { close: settings.service.close }),
     },
     {
       screen: "checkout",
@@ -64,9 +65,14 @@ export function HomeScreen({
       sub: phrases.infoS,
     },
   ] as const;
-  const offered = cards.filter(
-    (card) => settings.categories[card.category].enabled,
-  );
+  const hasDishes = settings.service.dishes.some((dish) => dish.available);
+  const hasCheckout = settings.lateCheckout.length > 0;
+  const offered = cards.filter((card) => {
+    if (!settings.categories[card.category].enabled) return false;
+    if (card.category === "service") return hasDishes;
+    if (card.category === "checkout") return hasCheckout;
+    return true;
+  });
 
   return (
     <div className="animate-rise px-5.5 pt-3.5 pb-9">

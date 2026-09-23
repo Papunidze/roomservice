@@ -1,4 +1,4 @@
-import type { Category, StaffRole } from "@/features/requests";
+import type { StaffRole } from "@/features/requests";
 import type { LangCode } from "@/shared/i18n";
 
 export interface TeamMember {
@@ -7,26 +7,15 @@ export interface TeamMember {
   email: string;
   role: StaffRole;
   lang: LangCode;
-  telegram: boolean;
   onShift: boolean;
+  onShiftSince: string | null;
   lastActive: string | null;
   hasPassword: boolean;
 }
 
-export const ROUTING_GROUPS = [
-  { key: "maintenance", categories: ["ac", "water", "wifi", "tv"] },
-  { key: "housekeeping", categories: ["cleaning", "items"] },
-  { key: "frontDesk", categories: ["noise", "service", "checkout", "other"] },
-] as const satisfies readonly {
-  key: string;
-  categories: readonly Category[];
-}[];
-
-export type RoutingGroup = (typeof ROUTING_GROUPS)[number]["key"];
-
 export interface TeamConfig {
-  routing: Record<RoutingGroup, StaffRole>;
   autoAssign: boolean;
+  offShiftHours: number;
   escalation: {
     enabled: boolean;
     minutes: number;

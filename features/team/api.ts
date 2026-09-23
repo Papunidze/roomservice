@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { langCodeSchema, STAFF_ROLES } from "@/features/requests";
+import type { LangCode } from "@/shared/i18n";
 import {
   apiDelete,
   apiGet,
@@ -20,19 +21,15 @@ const memberSchema = z.object({
   email: z.string(),
   role: roleSchema,
   lang: langCodeSchema,
-  telegram: z.boolean(),
   onShift: z.boolean(),
+  onShiftSince: z.string().nullable(),
   lastActive: z.string().nullable(),
   hasPassword: z.boolean(),
 });
 
 const configSchema = z.object({
-  routing: z.object({
-    maintenance: roleSchema,
-    housekeeping: roleSchema,
-    frontDesk: roleSchema,
-  }),
   autoAssign: z.boolean(),
+  offShiftHours: z.number(),
   escalation: z.object({
     enabled: z.boolean(),
     minutes: z.number(),
@@ -56,13 +53,12 @@ export const inviteMemberApi = (input: {
   name: string;
   email: string;
   role: TeamMember["role"];
+  lang: LangCode;
 }) => apiPost("/api/team/members", input, oneMember);
 
 export const patchMemberApi = (
   id: string,
-  patch: Partial<
-    Pick<TeamMember, "name" | "role" | "lang" | "telegram" | "onShift">
-  >,
+  patch: Partial<Pick<TeamMember, "name" | "role" | "lang" | "onShift">>,
 ) => apiPatch(`/api/team/members/${id}`, patch, oneMember);
 
 export const removeMemberApi = (id: string) =>

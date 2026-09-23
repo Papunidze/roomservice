@@ -10,6 +10,7 @@ import { openPlatePrint } from "../print";
 import {
   addRooms,
   closeGuestSession,
+  editRoom,
   markPrinted,
   regenerateRoom,
   removeRooms,
@@ -17,6 +18,7 @@ import {
 } from "../store";
 import type { Room } from "../types";
 import { AddRoomsModal } from "./AddRoomsModal";
+import { EditRoomModal } from "./EditRoomModal";
 import { QrPlatePanel } from "./QrPlatePanel";
 import { RoomsTable } from "./RoomsTable";
 
@@ -26,6 +28,7 @@ export function RoomsScreen() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [plateRoom, setPlateRoom] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editing, setEditing] = useState<Room | null>(null);
 
   const active = rooms.find((room) => room.no === plateRoom);
   const withGuest = rooms.filter((room) => room.session).length;
@@ -153,6 +156,7 @@ export function RoomsScreen() {
           onToggle={toggle}
           onToggleAll={toggleAll}
           onShowPlate={setPlateRoom}
+          onEdit={setEditing}
           onCloseSession={checkOut}
         />
       </div>
@@ -164,6 +168,14 @@ export function RoomsScreen() {
           onClose={() => setPlateRoom(null)}
           onRegenerate={() => regenerate(active.no)}
           onPrint={() => printPlates([active.no])}
+        />
+      ) : null}
+
+      {editing ? (
+        <EditRoomModal
+          room={editing}
+          onClose={() => setEditing(null)}
+          onSave={(patch) => editRoom(editing.no, patch)}
         />
       ) : null}
 
