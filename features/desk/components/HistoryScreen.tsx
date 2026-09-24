@@ -79,7 +79,7 @@ export function HistoryScreen() {
   const selectedRoom = rooms.find((room) => room.no === selected?.room);
 
   return (
-    <div className="scrollbar-slim px-4 pt-5 pb-8 md:h-[min(860px,calc(100dvh-8rem))] md:min-h-[560px] md:overflow-y-auto md:px-7 md:pt-6">
+    <div className="scrollbar-slim px-4 pt-5 pb-8 md:min-h-0 md:flex-1 md:overflow-y-auto md:px-7 md:pt-6">
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <div>
           <div className="text-[22px] font-semibold tracking-[-0.03em]">

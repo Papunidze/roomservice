@@ -88,7 +88,7 @@ export function RoomsScreen() {
   };
 
   return (
-    <div className="flex flex-col md:h-[min(860px,calc(100dvh-8rem))] md:min-h-[560px] md:flex-row md:items-stretch">
+    <div className="flex flex-col md:min-h-0 md:flex-1 md:flex-row md:items-stretch">
       <div className="flex min-w-0 flex-1 flex-col px-4 pt-5 md:px-7 md:pt-6">
         <div className="mb-4.5 flex flex-wrap items-center gap-3">
           <div>

@@ -127,12 +127,10 @@ export function TrackScreen({
                 <button
                   key={score}
                   type="button"
-                  disabled={
-                    request.rating !== null && request.rating !== undefined
-                  }
                   aria-label={String(score)}
+                  aria-pressed={request.rating?.score === score}
                   onClick={() => onRate(score)}
-                  className="grid size-11 cursor-pointer place-items-center rounded-full border border-line-strong disabled:cursor-default"
+                  className="grid size-11 cursor-pointer place-items-center rounded-full border border-line-strong"
                 >
                   <Star
                     strokeWidth={1.6}

@@ -6,8 +6,8 @@ export default function DeskLayout({ children }: LayoutProps<"/desk">) {
   return (
     <AuthGate>
       <DeskBoot>
-        <div className="min-h-dvh bg-canvas md:p-7.5">
-          <div className="relative mx-auto min-h-dvh w-360 max-w-full overflow-hidden bg-panel md:min-h-0 md:rounded-card md:border md:border-line">
+        <div className="min-h-dvh bg-canvas md:h-dvh md:min-h-[640px] md:p-7.5">
+          <div className="relative mx-auto flex min-h-dvh w-360 max-w-full flex-col overflow-hidden bg-panel md:h-full md:min-h-0 md:rounded-card md:border md:border-line">
             <DeskHeader />
             {children}
             <Overlays />

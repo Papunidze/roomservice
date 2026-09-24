@@ -18,7 +18,7 @@ export function GuestPreviewScreen() {
   const liveRoom = rooms[0];
 
   return (
-    <div className="scrollbar-slim h-[min(860px,calc(100dvh-8rem))] min-h-[560px] overflow-y-auto px-4 pt-5 pb-8 md:px-7 md:pt-6">
+    <div className="scrollbar-slim md:min-h-0 md:flex-1 md:overflow-y-auto px-4 pt-5 pb-8 md:px-7 md:pt-6">
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <div>
           <div className="text-[22px] font-semibold tracking-[-0.03em]">

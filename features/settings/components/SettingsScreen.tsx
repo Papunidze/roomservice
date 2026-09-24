@@ -63,7 +63,7 @@ export function SettingsScreen({
   };
 
   return (
-    <div className="flex flex-col md:h-[min(860px,calc(100dvh-8rem))] md:min-h-[560px] md:flex-row md:items-stretch">
+    <div className="flex flex-col md:min-h-0 md:flex-1 md:flex-row md:items-stretch">
       <nav className="scrollbar-slim flex shrink-0 gap-1 overflow-x-auto border-b border-line px-4 py-3 md:w-60 md:flex-col md:gap-0.5 md:border-r md:border-b-0 md:py-6">
         <div className="hidden px-3 pb-4 text-[22px] font-semibold tracking-[-0.03em] md:block">
           Settings
